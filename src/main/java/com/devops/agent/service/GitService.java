@@ -32,27 +32,6 @@ public class GitService {
         return tempDir;
     }
 
-//    public void cleanup(Path dir) {
-//        if (dir == null) return;
-//        try {
-//            Files.walkFileTree(dir, new SimpleFileVisitor<>() {
-//                @Override
-//                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-//                    Files.delete(file);
-//                    return FileVisitResult.CONTINUE;
-//                }
-//
-//                @Override
-//                public FileVisitResult postVisitDirectory(Path d, IOException exc) throws IOException {
-//                    Files.delete(d);
-//                    return FileVisitResult.CONTINUE;
-//                }
-//            });
-//        } catch (IOException e) {
-//            log.warn("Failed to cleanup temp dir: {}", e.getMessage());
-//        }
-//    }
-
     public void cleanup(Path dir) {
         if (dir == null) return;
 

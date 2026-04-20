@@ -1,18 +1,3 @@
-//package com.devops.agent;
-//
-//import org.springframework.boot.SpringApplication;
-//import org.springframework.boot.autoconfigure.SpringBootApplication;
-//import org.springframework.cache.annotation.EnableCaching;
-//
-//@SpringBootApplication
-//@EnableCaching
-//public class Application {
-//    public static void main(String[] args) {
-//        SpringApplication.run(Application.class, args);
-//    }
-//}
-
-
 package com.devops.agent;
 
 import io.github.cdimascio.dotenv.Dotenv;
