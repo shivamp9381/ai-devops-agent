@@ -285,6 +285,11 @@ border-radius:50%;
 animation:spin .8s linear infinite;
 }
 
+.dragging{
+border-color:#6366f1 !important;
+background:rgba(99,102,241,.08);
+}
+
 @keyframes spin{
 to{transform:rotate(360deg);}
 }
