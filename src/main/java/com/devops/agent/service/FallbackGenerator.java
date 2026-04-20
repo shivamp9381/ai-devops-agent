@@ -34,7 +34,7 @@ public class FallbackGenerator {
                     COPY pom.xml .
                     COPY src ./src
                     RUN apk add --no-cache maven && mvn clean package -DskipTests
-                    
+
                     FROM eclipse-temurin:17-jre-alpine
                     WORKDIR /app
                     COPY --from=build /app/target/*.jar app.jar
@@ -49,7 +49,7 @@ public class FallbackGenerator {
                     WORKDIR /app
                     COPY . .
                     RUN ./gradlew build -x test
-                    
+
                     FROM eclipse-temurin:17-jre-alpine
                     WORKDIR /app
                     COPY --from=build /app/build/libs/*.jar app.jar
@@ -65,7 +65,7 @@ public class FallbackGenerator {
                     RUN npm ci
                     COPY . .
                     RUN npm run build
-                    
+
                     FROM node:20-alpine
                     WORKDIR /app
                     COPY --from=build /app/.next ./.next
@@ -84,7 +84,7 @@ public class FallbackGenerator {
                     RUN npm ci
                     COPY . .
                     RUN npm run build
-                    
+
                     FROM nginx:alpine
                     COPY --from=build /app/build /usr/share/nginx/html
                     EXPOSE 80
@@ -145,7 +145,7 @@ public class FallbackGenerator {
                     RUN go mod download
                     COPY . .
                     RUN CGO_ENABLED=0 go build -o main .
-                    
+
                     FROM alpine:3.19
                     WORKDIR /app
                     COPY --from=build /app/main .
@@ -290,13 +290,13 @@ public class FallbackGenerator {
 
         return """
                 name: CI/CD Pipeline
-                
+
                 on:
                   push:
                     branches: [ main, develop ]
                   pull_request:
                     branches: [ main ]
-                
+
                 jobs:
                   build:
                     runs-on: ubuntu-latest
@@ -330,43 +330,43 @@ public class FallbackGenerator {
     private String generateDeploySteps(String type) {
         return """
                 ## Deployment Steps
-                
+
                 ### 1. Local Development
                 ```bash
                 # Clone the repository
                 git clone <repo-url>
                 cd <project-name>
-                
+
                 # Copy environment file
                 cp .env.example .env
                 # Edit .env with your values
                 ```
-                
+
                 ### 2. Docker Deployment
                 ```bash
                 # Build and run with Docker Compose
                 docker-compose up -d --build
-                
+
                 # Check logs
                 docker-compose logs -f
-                
+
                 # Stop
                 docker-compose down
                 ```
-                
+
                 ### 3. Production Deployment
                 ```bash
                 # Build Docker image
                 docker build -t myapp:latest .
-                
+
                 # Push to registry
                 docker tag myapp:latest registry.example.com/myapp:latest
                 docker push registry.example.com/myapp:latest
-                
+
                 # Deploy (example with Docker)
                 docker run -d --name myapp -p 80:PORT --env-file .env myapp:latest
                 ```
-                
+
                 ### 4. Cloud Deployment Options
                 - **AWS**: ECS, EKS, or Elastic Beanstalk
                 - **GCP**: Cloud Run, GKE
@@ -404,3 +404,4 @@ public class FallbackGenerator {
         return recs;
     }
 }
+

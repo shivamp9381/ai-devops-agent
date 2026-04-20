@@ -137,3 +137,4 @@ public class AnalysisService {
                 || Files.exists(dir.resolve("index.html"));
     }
 }
+
