@@ -5,136 +5,130 @@ import com.devops.agent.model.ProjectContext;
 import com.devops.agent.util.ProjectScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
-import java.nio.file.*;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 @Service
 public class AnalysisService {
 
-    private static final Logger log = LoggerFactory.getLogger(AnalysisService.class);
-    private static final long MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+    private static final Logger log =
+            LoggerFactory.getLogger(AnalysisService.class);
 
     private final GitService gitService;
     private final AiService aiService;
     private final FallbackGenerator fallbackGenerator;
 
-    public AnalysisService(GitService gitService, AiService aiService, FallbackGenerator fallbackGenerator) {
+    public AnalysisService(
+            GitService gitService,
+            AiService aiService,
+            FallbackGenerator fallbackGenerator
+    ) {
         this.gitService = gitService;
         this.aiService = aiService;
         this.fallbackGenerator = fallbackGenerator;
     }
 
-    @Cacheable(value = "repoAnalysis", key = "#repoUrl")
+    // ----------------------------------------
+    // Analyze GitHub Repo
+    // ----------------------------------------
     public AnalysisResult analyzeRepo(String repoUrl) {
-        Path clonedDir = null;
+
+        Path dir = null;
+
         try {
-            clonedDir = gitService.cloneRepo(repoUrl);
-            ProjectContext ctx = ProjectScanner.scan(clonedDir);
+            log.info("Starting repo analysis: {}", repoUrl);
+
+            dir = gitService.cloneRepo(repoUrl);
+
+            ProjectContext ctx = ProjectScanner.scan(dir);
+
             return runAnalysis(ctx);
+
         } catch (Exception e) {
-            log.error("Repo analysis failed: {}", e.getMessage());
-            throw new RuntimeException("Failed to analyze repository: " + e.getMessage());
+            log.error("Repo analysis failed", e);
+            throw new RuntimeException("Repo analysis failed");
         } finally {
-            gitService.cleanup(clonedDir);
+            gitService.cleanup(dir);
         }
     }
 
+    // ----------------------------------------
+    // Analyze ZIP Upload
+    // ----------------------------------------
     public AnalysisResult analyzeUpload(MultipartFile file) {
-        if (file.isEmpty()) throw new IllegalArgumentException("Uploaded file is empty");
-        if (file.getSize() > MAX_UPLOAD_BYTES) throw new IllegalArgumentException("File too large (max 50MB)");
 
-        String name = file.getOriginalFilename();
-        if (name == null || !name.toLowerCase().endsWith(".zip")) {
-            throw new IllegalArgumentException("Only ZIP files are supported");
-        }
+        Path temp = null;
 
-        Path tempDir = null;
         try {
-            tempDir = Files.createTempDirectory("devops-upload-");
-            extractZip(file.getInputStream(), tempDir);
+            temp = Files.createTempDirectory("upload-");
 
-            Path projectRoot = findProjectRoot(tempDir);
-            ProjectContext ctx = ProjectScanner.scan(projectRoot);
+            unzip(file.getInputStream(), temp);
+
+            ProjectContext ctx = ProjectScanner.scan(temp);
+
             return runAnalysis(ctx);
-        } catch (IllegalArgumentException e) {
-            throw e;
+
         } catch (Exception e) {
-            log.error("Upload analysis failed: {}", e.getMessage());
-            throw new RuntimeException("Failed to analyze upload: " + e.getMessage());
+            log.error("Upload analysis failed", e);
+            throw new RuntimeException("Upload analysis failed");
         } finally {
-            gitService.cleanup(tempDir);
+            gitService.cleanup(temp);
         }
     }
 
+    // ----------------------------------------
+    // MAIN ANALYSIS FLOW
+    // ----------------------------------------
     private AnalysisResult runAnalysis(ProjectContext ctx) {
-        AnalysisResult aiResult = aiService.analyze(ctx);
-        if (aiResult != null) {
-            log.info("AI analysis succeeded for project type: {}", ctx.getProjectType());
-            return aiResult;
+
+        AnalysisResult result = aiService.analyze(ctx);
+
+        if (result != null) {
+            log.info("AI analysis successful");
+        } else {
+            log.warn("AI failed. Using fallback generator.");
+            result = fallbackGenerator.generate(ctx);
         }
-        log.info("Using fallback generator for project type: {}", ctx.getProjectType());
-        return fallbackGenerator.generate(ctx);
+
+        result.setReadme(aiService.generateReadme(ctx));
+
+        SecurityScanner.scan(ctx, result);
+
+        return result;
     }
 
-    private void extractZip(InputStream inputStream, Path destDir) throws IOException {
-        try (ZipInputStream zis = new ZipInputStream(inputStream)) {
+    // ----------------------------------------
+    // unzip
+    // ----------------------------------------
+    private void unzip(InputStream is, Path target) throws Exception {
+
+        try (ZipInputStream zis = new ZipInputStream(is)) {
+
             ZipEntry entry;
-            long totalSize = 0;
-            int entryCount = 0;
 
             while ((entry = zis.getNextEntry()) != null) {
-                if (entryCount++ > 10_000) throw new IOException("Too many entries in ZIP");
 
-                Path resolved = destDir.resolve(entry.getName()).normalize();
-                if (!resolved.startsWith(destDir)) {
-                    throw new IOException("ZIP entry outside target directory (zip slip)");
+                Path newPath = target.resolve(entry.getName()).normalize();
+
+                if (!newPath.startsWith(target)) {
+                    continue;
                 }
 
                 if (entry.isDirectory()) {
-                    Files.createDirectories(resolved);
+                    Files.createDirectories(newPath);
                 } else {
-                    Files.createDirectories(resolved.getParent());
-                    try (OutputStream os = Files.newOutputStream(resolved)) {
-                        byte[] buf = new byte[8192];
-                        int len;
-                        while ((len = zis.read(buf)) > 0) {
-                            totalSize += len;
-                            if (totalSize > MAX_UPLOAD_BYTES) throw new IOException("Extracted content too large");
-                            os.write(buf, 0, len);
-                        }
-                    }
+                    Files.createDirectories(newPath.getParent());
+                    Files.copy(zis, newPath);
                 }
+
                 zis.closeEntry();
             }
         }
     }
-
-    private Path findProjectRoot(Path dir) throws IOException {
-        if (hasProjectFiles(dir)) return dir;
-
-        try (var stream = Files.list(dir)) {
-            var subdirs = stream.filter(Files::isDirectory).toList();
-            if (subdirs.size() == 1 && hasProjectFiles(subdirs.get(0))) {
-                return subdirs.get(0);
-            }
-        }
-        return dir;
-    }
-
-    private boolean hasProjectFiles(Path dir) {
-        return Files.exists(dir.resolve("package.json"))
-                || Files.exists(dir.resolve("pom.xml"))
-                || Files.exists(dir.resolve("requirements.txt"))
-                || Files.exists(dir.resolve("build.gradle"))
-                || Files.exists(dir.resolve("go.mod"))
-                || Files.exists(dir.resolve("Dockerfile"))
-                || Files.exists(dir.resolve("index.html"));
-    }
 }
-

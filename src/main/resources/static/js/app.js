@@ -1,289 +1,272 @@
-document.addEventListener("DOMContentLoaded", () => {
+let latestData = {};
 
-    initTheme();
+document.addEventListener("DOMContentLoaded", () => {
     initTabs();
     initRepoForm();
     initUploadForm();
-    initCopyButtons();
-
+    loadTheme();
 });
 
-
-// ---------------- THEME ----------------
-function initTheme() {
-    const btn = document.getElementById("themeToggle");
-
-    const saved = localStorage.getItem("theme") || "light";
-    document.documentElement.setAttribute("data-theme", saved);
-    btn.textContent = saved === "dark" ? "☀️" : "🌙";
-
-    btn.onclick = () => {
-        const current = document.documentElement.getAttribute("data-theme");
-        const next = current === "dark" ? "light" : "dark";
-
-        document.documentElement.setAttribute("data-theme", next);
-        localStorage.setItem("theme", next);
-        btn.textContent = next === "dark" ? "☀️" : "🌙";
-    };
-}
-
-
-// ---------------- TABS ----------------
 function initTabs() {
+
     document.querySelectorAll(".tab").forEach(tab => {
-        tab.onclick = () => {
 
-            document.querySelectorAll(".tab").forEach(t =>
-                t.classList.remove("active"));
+        tab.addEventListener("click", () => {
 
-            document.querySelectorAll(".tab-content").forEach(c =>
-                c.classList.remove("active"));
+            document.querySelectorAll(".tab")
+                .forEach(t => t.classList.remove("active"));
+
+            document.querySelectorAll(".tab-content")
+                .forEach(c => c.classList.remove("active"));
 
             tab.classList.add("active");
 
             document
                 .getElementById("tab-" + tab.dataset.tab)
                 .classList.add("active");
-        };
+        });
     });
 }
 
-
-// ---------------- REPO ----------------
 function initRepoForm() {
 
-    document.getElementById("repoForm").onsubmit = async (e) => {
-        e.preventDefault();
+    document.getElementById("repoForm")
+        .addEventListener("submit", async e => {
 
-        const url = document.getElementById("repoUrl").value.trim();
+            e.preventDefault();
 
-        if (!url) return showError("Please enter repository URL");
+            const btn =
+                document.getElementById("repoBtn");
 
-        setLoading("repoBtn", true);
+            setLoading(btn, true);
 
-        try {
+            try {
 
-            const res = await fetch("/api/analyze/repo", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ repoUrl: url })
-            });
+                const repoUrl =
+                    document.getElementById("repoUrl").value;
 
-            const data = await res.json();
+                const res = await fetch(
+                    "/api/analyze/repo",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            repoUrl: repoUrl
+                        })
+                    }
+                );
 
-            if (!res.ok) throw new Error(data.error || "Failed");
+                const data = await res.json();
 
-            render(data);
-            toast("Repository analyzed 🚀");
+                render(data);
 
-        } catch (err) {
-            showError(err.message);
-        }
+            } catch (e) {
+                alert("Analysis failed");
+            }
 
-        setLoading("repoBtn", false);
-    };
+            setLoading(btn, false);
+        });
 }
 
-
-// ---------------- ZIP UPLOAD ----------------
 function initUploadForm() {
 
-    const dropZone = document.getElementById("dropZone");
-    const fileInput = document.getElementById("fileInput");
-    const uploadBtn = document.getElementById("uploadBtn");
+    document.getElementById("uploadForm")
+        .addEventListener("submit", async e => {
 
-    dropZone.onclick = () => fileInput.click();
+            e.preventDefault();
 
-    dropZone.addEventListener("dragover", e => {
-        e.preventDefault();
-        dropZone.classList.add("dragging");
-    });
+            const btn =
+                document.getElementById("uploadBtn");
 
-    dropZone.addEventListener("dragleave", () => {
-        dropZone.classList.remove("dragging");
-    });
+            setLoading(btn, true);
 
-    dropZone.addEventListener("drop", e => {
-        e.preventDefault();
+            try {
 
-        dropZone.classList.remove("dragging");
+                const file =
+                    document.getElementById("zipFile")
+                        .files[0];
 
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            fileInput.files = e.dataTransfer.files;
-            updateSelectedFile(file);
-        }
-    });
+                const fd = new FormData();
 
-    fileInput.onchange = () => {
-        if (fileInput.files.length) {
-            updateSelectedFile(fileInput.files[0]);
-        }
-    };
+                fd.append("file", file);
 
-    function updateSelectedFile(file) {
+                const res = await fetch(
+                    "/api/analyze/upload",
+                    {
+                        method: "POST",
+                        body: fd
+                    }
+                );
 
-        if (!file.name.toLowerCase().endsWith(".zip")) {
-            showError("Only ZIP files are supported");
-            fileInput.value = "";
-            return;
-        }
+                const data = await res.json();
 
-        document.getElementById("fileName").textContent =
-            "Selected: " + file.name;
+                render(data);
 
-        uploadBtn.disabled = false;
-    }
+            } catch (e) {
+                alert("Upload failed");
+            }
 
-    document.getElementById("uploadForm").onsubmit = async (e) => {
-
-        e.preventDefault();
-
-        if (!fileInput.files.length) {
-            return showError("Please choose ZIP file");
-        }
-
-        setLoading("uploadBtn", true);
-
-        try {
-
-            const fd = new FormData();
-            fd.append("file", fileInput.files[0]);
-
-            const res = await fetch("/api/analyze/upload", {
-                method: "POST",
-                body: fd
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) throw new Error(data.error || "Upload failed");
-
-            render(data);
-            toast("ZIP analyzed successfully 📦");
-
-        } catch (err) {
-            showError(err.message);
-        }
-
-        setLoading("uploadBtn", false);
-    };
+            setLoading(btn, false);
+        });
 }
 
+async function debugError() {
 
-// ---------------- RENDER ----------------
+    const error =
+        document.getElementById("errorText").value;
+
+    const res = await fetch("/api/debug", {
+        method: "POST",
+        headers: {
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+            error:error
+        })
+    });
+
+    const txt = await res.text();
+
+    document.getElementById("debugOutput")
+        .textContent = txt;
+}
+
+function setLoading(button, loading) {
+
+    const text =
+        button.querySelector(".btn-text");
+
+    const spinner =
+        button.querySelector(".spinner");
+
+    if (loading) {
+        button.disabled = true;
+        text.classList.add("hidden");
+        spinner.classList.remove("hidden");
+    } else {
+        button.disabled = false;
+        text.classList.remove("hidden");
+        spinner.classList.add("hidden");
+    }
+}
+
 function render(data) {
 
-    document.getElementById("results").classList.remove("hidden");
-
-    document.getElementById("stackBadge").textContent = data.stack || "";
-
-    document.getElementById("dockerfile").textContent = data.dockerfile || "";
-    document.getElementById("compose").textContent = data.compose || "";
-    document.getElementById("env").textContent = data.env || "";
-    document.getElementById("githubActions").textContent = data.githubActions || "";
-    document.getElementById("deploySteps").textContent = data.deploySteps || "";
-
-    const ul = document.getElementById("recommendations");
-    ul.innerHTML = "";
-
-    (data.recommendations || []).forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        ul.appendChild(li);
-    });
+    latestData = data;
 
     document.getElementById("results")
-        .scrollIntoView({ behavior: "smooth" });
-}
+        .classList.remove("hidden");
 
+    document.getElementById("stackBadge")
+        .textContent = data.stack || "Detected Stack";
 
-// ---------------- COPY ----------------
-function initCopyButtons() {
-    document.querySelectorAll(".copy-btn").forEach(btn => {
-        btn.onclick = () => copyText(btn.dataset.target);
+    document.getElementById("security")
+        .textContent =
+        (data.securityStatus || "") +
+        " (" +
+        (data.securityScore || 0) +
+        "/100)";
+
+    setText("readme", data.readme);
+    setText("dockerfile", data.dockerfile);
+    setText("compose", data.compose);
+    setText("env", data.env);
+    setText("githubActions", data.githubActions);
+    setText("deploySteps", data.deploySteps);
+
+    window.scrollTo({
+        top:
+            document.getElementById("results")
+                .offsetTop - 20,
+        behavior: "smooth"
     });
 }
 
-function copyText(id) {
-    navigator.clipboard.writeText(
-        document.getElementById(id).textContent
-    );
-    toast("Copied");
+function setText(id, value) {
+
+    document.getElementById(id)
+        .textContent = value || "";
 }
 
+/* ----------------------------
+   Theme
+---------------------------- */
 
-// ---------------- DOWNLOAD ----------------
-function downloadGeneratedFile(name, id) {
+function toggleTheme() {
 
-    const text = document.getElementById(id).textContent;
+    document.body.classList.toggle("light");
 
-    const blob = new Blob([text], { type: "text/plain" });
+    const mode =
+        document.body.classList.contains("light")
+        ? "light"
+        : "dark";
 
-    const a = document.createElement("a");
+    localStorage.setItem("theme", mode);
+}
+
+function loadTheme() {
+
+    const mode =
+        localStorage.getItem("theme");
+
+    if (mode === "light") {
+        document.body.classList.add("light");
+    }
+}
+
+/* ----------------------------
+   Downloads
+---------------------------- */
+
+function downloadSingle(fileName, id) {
+
+    const text =
+        document.getElementById(id)
+            .textContent;
+
+    const blob =
+        new Blob([text], {
+            type: "text/plain"
+        });
+
+    const a =
+        document.createElement("a");
+
     a.href = URL.createObjectURL(blob);
-    a.download = name;
+    a.download = fileName;
     a.click();
 }
 
-async function downloadAllZip() {
+function downloadZip() {
 
-    const zip = new JSZip();
+    let content = "";
 
-    zip.file("Dockerfile", getText("dockerfile"));
-    zip.file("docker-compose.yml", getText("compose"));
-    zip.file(".env.example", getText("env"));
-    zip.file("workflow.yml", getText("githubActions"));
-    zip.file("deployment-steps.txt", getText("deploySteps"));
+    content += "README.md\n\n";
+    content += latestData.readme + "\n\n";
 
-    const blob = await zip.generateAsync({ type: "blob" });
+    content += "Dockerfile\n\n";
+    content += latestData.dockerfile + "\n\n";
 
-    const a = document.createElement("a");
+    content += "docker-compose.yml\n\n";
+    content += latestData.compose + "\n\n";
+
+    content += ".env.example\n\n";
+    content += latestData.env + "\n\n";
+
+    content += "deploy.yml\n\n";
+    content += latestData.githubActions + "\n\n";
+
+    const blob =
+        new Blob([content], {
+            type: "text/plain"
+        });
+
+    const a =
+        document.createElement("a");
+
     a.href = URL.createObjectURL(blob);
-    a.download = "devops-assets.zip";
+    a.download = "devops-assets.txt";
     a.click();
-
-    toast("ZIP downloaded 📦");
-}
-
-function getText(id) {
-    return document.getElementById(id).textContent;
-}
-
-
-// ---------------- UI HELPERS ----------------
-function setLoading(id, state) {
-
-    const btn = document.getElementById(id);
-
-    btn.disabled = state;
-
-    btn.querySelector(".btn-text")
-        .classList.toggle("hidden", state);
-
-    btn.querySelector(".spinner")
-        .classList.toggle("hidden", !state);
-}
-
-function showError(msg) {
-    const el = document.getElementById("errorMsg");
-
-    el.textContent = "❌ " + msg;
-    el.classList.remove("hidden");
-
-    setTimeout(() => {
-        el.classList.add("hidden");
-    }, 4000);
-}
-
-function toast(msg) {
-
-    const t = document.getElementById("toast");
-
-    t.textContent = msg;
-    t.classList.remove("hidden");
-
-    setTimeout(() => {
-        t.classList.add("hidden");
-    }, 2500);
 }

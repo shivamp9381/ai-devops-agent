@@ -1,161 +1,145 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevOpsPilot AI - AI DevOps Agent</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <title>DevOpsPilot AI</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
-<div class="app">
 
-    <header>
-        <div class="header-content">
-            <div class="logo">
-                <span class="logo-icon">⚙️</span>
-                <h1>DevOpsPilot AI - AI DevOps Agent</h1>
-            </div>
-            <p class="subtitle">
-                Analyze GitHub repos or ZIP uploads and generate DevOps assets instantly.
-            </p>
+<div class="theme-toggle" onclick="toggleTheme()">☀️</div>
 
-            <button class="theme-toggle" id="themeToggle">🌙</button>
-        </div>
+<div class="container">
+
+    <header class="hero">
+        <h1>⚙️ DevOpsPilot AI</h1>
+        <p>Analyze repos and generate DevOps assets instantly</p>
     </header>
 
-    <main>
+    <div class="tabs">
+        <button class="tab active" data-tab="repo">GitHub URL</button>
+        <button class="tab" data-tab="upload">Upload ZIP</button>
+        <button class="tab" data-tab="debug">Debug Error</button>
+    </div>
 
-        <section class="input-section">
+    <div class="tab-content active" id="tab-repo">
+        <form id="repoForm" class="card">
+            <input type="text" id="repoUrl"
+                   placeholder="https://github.com/user/repository"
+                   required>
 
-            <div class="tabs">
-                <button class="tab active" data-tab="repo">GitHub URL</button>
-                <button class="tab" data-tab="upload">Upload ZIP</button>
+            <button type="submit" id="repoBtn" class="btn">
+                <span class="btn-text">Analyze Repo</span>
+                <span class="spinner hidden"></span>
+            </button>
+        </form>
+    </div>
+
+    <div class="tab-content" id="tab-upload">
+        <form id="uploadForm" class="card">
+            <input type="file" id="zipFile" required>
+
+            <button type="submit" id="uploadBtn" class="btn">
+                <span class="btn-text">Analyze ZIP</span>
+                <span class="spinner hidden"></span>
+            </button>
+        </form>
+    </div>
+
+    <div class="tab-content" id="tab-debug">
+        <div class="card">
+        <textarea id="errorText"
+                  rows="8"
+                  placeholder="Paste Docker / Maven / Deployment error"></textarea>
+
+            <button class="btn" onclick="debugError()">
+                Fix My Error 🚀
+            </button>
+
+            <pre id="debugOutput"></pre>
+        </div>
+    </div>
+
+    <section id="results" class="results hidden">
+
+        <div class="result-topbar">
+
+            <h2>Results</h2>
+
+            <div class="stack-badge" id="stackBadge"></div>
+
+            <button class="download-btn"
+                    onclick="downloadZip()">
+                📦 Download ZIP
+            </button>
+
+        </div>
+
+        <div class="grid">
+
+            <div class="result-card">
+                <h3>🔐 Security</h3>
+                <div id="security"></div>
             </div>
 
-            <div class="tab-content active" id="tab-repo">
-                <form id="repoForm">
-                    <input type="url" id="repoUrl" placeholder="https://github.com/user/project" required>
-                    <button type="submit" class="btn-primary" id="repoBtn">
-                        <span class="btn-text">🔍 Analyze Repository</span>
-                        <span class="spinner hidden"></span>
-                    </button>
-                </form>
+            <div class="result-card">
+                <h3>📘 README.md</h3>
+                <button class="mini-btn"
+                        onclick="downloadSingle('README.md','readme')">
+                    ⬇
+                </button>
+                <pre><code id="readme"></code></pre>
             </div>
 
-            <div class="tab-content" id="tab-upload">
-                <form id="uploadForm">
-                    <div class="drop-zone" id="dropZone">
-                        <p>📁 Drag & drop ZIP here or click to browse</p>
-                        <input type="file" id="fileInput" accept=".zip" hidden>
-                        <span class="file-name" id="fileName"></span>
-                    </div>
-
-                    <button type="submit" class="btn-primary" id="uploadBtn" disabled>
-                        <span class="btn-text">📦 Analyze Upload</span>
-                        <span class="spinner hidden"></span>
-                    </button>
-                </form>
+            <div class="result-card">
+                <h3>🐳 Dockerfile</h3>
+                <button class="mini-btn"
+                        onclick="downloadSingle('Dockerfile','dockerfile')">
+                    ⬇
+                </button>
+                <pre><code id="dockerfile"></code></pre>
             </div>
 
-        </section>
-
-        <div class="error-msg hidden" id="errorMsg"></div>
-        <div class="toast hidden" id="toast"></div>
-
-        <section class="results hidden" id="results">
-
-            <div class="result-header">
-                <h2>Analysis Results</h2>
-
-                <div class="header-actions">
-                    <div class="stack-badge" id="stackBadge"></div>
-                    <button class="zip-btn" onclick="downloadAllZip()">📦 Download ZIP</button>
-                </div>
+            <div class="result-card">
+                <h3>📦 docker-compose.yml</h3>
+                <button class="mini-btn"
+                        onclick="downloadSingle('docker-compose.yml','compose')">
+                    ⬇
+                </button>
+                <pre><code id="compose"></code></pre>
             </div>
 
-            <div class="result-grid">
-
-                <!-- Dockerfile -->
-                <div class="result-card">
-                    <div class="card-header">
-                        <h3>🐳 Dockerfile</h3>
-                        <div class="card-actions">
-                            <button class="copy-btn" data-target="dockerfile">📋 Copy</button>
-                            <button class="download-btn" onclick="downloadGeneratedFile('Dockerfile','dockerfile')">📥</button>
-                        </div>
-                    </div>
-                    <pre><code id="dockerfile"></code></pre>
-                </div>
-
-                <!-- Compose -->
-                <div class="result-card">
-                    <div class="card-header">
-                        <h3>🐙 Docker Compose</h3>
-                        <div class="card-actions">
-                            <button class="copy-btn" data-target="compose">📋 Copy</button>
-                            <button class="download-btn" onclick="downloadGeneratedFile('docker-compose.yml','compose')">📥</button>
-                        </div>
-                    </div>
-                    <pre><code id="compose"></code></pre>
-                </div>
-
-                <!-- ENV -->
-                <div class="result-card">
-                    <div class="card-header">
-                        <h3>🔐 .env.example</h3>
-                        <div class="card-actions">
-                            <button class="copy-btn" data-target="env">📋 Copy</button>
-                            <button class="download-btn" onclick="downloadGeneratedFile('.env.example','env')">📥</button>
-                        </div>
-                    </div>
-                    <pre><code id="env"></code></pre>
-                </div>
-
-                <!-- Actions -->
-                <div class="result-card">
-                    <div class="card-header">
-                        <h3>🚀 GitHub Actions</h3>
-                        <div class="card-actions">
-                            <button class="copy-btn" data-target="githubActions">📋 Copy</button>
-                            <button class="download-btn" onclick="downloadGeneratedFile('workflow.yml','githubActions')">📥</button>
-                        </div>
-                    </div>
-                    <pre><code id="githubActions"></code></pre>
-                </div>
-
-                <!-- Deploy -->
-                <div class="result-card full-width">
-                    <div class="card-header">
-                        <h3>📋 Deployment Steps</h3>
-                        <div class="card-actions">
-                            <button class="copy-btn" data-target="deploySteps">📋 Copy</button>
-                            <button class="download-btn" onclick="downloadGeneratedFile('deployment-steps.txt','deploySteps')">📥</button>
-                        </div>
-                    </div>
-                    <div class="deploy-steps" id="deploySteps"></div>
-                </div>
-
-                <!-- Recommendations -->
-                <div class="result-card full-width">
-                    <div class="card-header">
-                        <h3>💡 Recommendations</h3>
-                    </div>
-                    <ul class="recommendations" id="recommendations"></ul>
-                </div>
-
+            <div class="result-card">
+                <h3>🔑 .env.example</h3>
+                <button class="mini-btn"
+                        onclick="downloadSingle('.env.example','env')">
+                    ⬇
+                </button>
+                <pre><code id="env"></code></pre>
             </div>
-        </section>
 
-    </main>
+            <div class="result-card">
+                <h3>⚙️ GitHub Actions</h3>
+                <button class="mini-btn"
+                        onclick="downloadSingle('deploy.yml','githubActions')">
+                    ⬇
+                </button>
+                <pre><code id="githubActions"></code></pre>
+            </div>
 
-    <footer>
-        <p>Built with Spring Boot + Groq AI</p>
-    </footer>
+            <div class="result-card full">
+                <h3>🚀 Deploy Steps</h3>
+                <pre><code id="deploySteps"></code></pre>
+            </div>
+
+        </div>
+
+    </section>
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script th:src="@{/js/app.js}"></script>
+<script src="/js/app.js"></script>
 </body>
 </html>

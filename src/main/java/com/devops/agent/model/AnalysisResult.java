@@ -10,9 +10,13 @@ public class AnalysisResult {
     private String env;
     private String githubActions;
     private String deploySteps;
-    private List<String> recommendations;
+    private String readme;
 
-    public AnalysisResult() {}
+    private String securityStatus;
+    private int securityScore;
+    private List<String> risks;
+
+    private List<String> recommendations;
 
     public String getStack() { return stack; }
     public void setStack(String stack) { this.stack = stack; }
@@ -31,6 +35,18 @@ public class AnalysisResult {
 
     public String getDeploySteps() { return deploySteps; }
     public void setDeploySteps(String deploySteps) { this.deploySteps = deploySteps; }
+
+    public String getReadme() { return readme; }
+    public void setReadme(String readme) { this.readme = readme; }
+
+    public String getSecurityStatus() { return securityStatus; }
+    public void setSecurityStatus(String securityStatus) { this.securityStatus = securityStatus; }
+
+    public int getSecurityScore() { return securityScore; }
+    public void setSecurityScore(int securityScore) { this.securityScore = securityScore; }
+
+    public List<String> getRisks() { return risks; }
+    public void setRisks(List<String> risks) { this.risks = risks; }
 
     public List<String> getRecommendations() { return recommendations; }
     public void setRecommendations(List<String> recommendations) { this.recommendations = recommendations; }

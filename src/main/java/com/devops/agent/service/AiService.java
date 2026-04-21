@@ -22,13 +22,15 @@ import java.util.stream.Collectors;
 @Service
 public class AiService {
 
-    private static final Logger log = LoggerFactory.getLogger(AiService.class);
-    private static final int MAX_RETRIES = 3;
+    private static final Logger log =
+            LoggerFactory.getLogger(AiService.class);
 
     private final ObjectMapper mapper = new ObjectMapper();
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(15))
-            .build();
+
+    private final HttpClient httpClient =
+            HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(15))
+                    .build();
 
     @Value("${groq.api.key:}")
     private String groqApiKey;
@@ -40,143 +42,406 @@ public class AiService {
     private String groqModel;
 
     public AnalysisResult analyze(ProjectContext ctx) {
+
         if (groqApiKey == null || groqApiKey.isBlank()) {
-            log.warn("No GROQ_API_KEY configured, using fallback generator");
+            log.warn("No GROQ API key found");
             return null;
         }
 
-        String prompt = buildPrompt(ctx);
+        try {
+            String prompt = buildPrompt(ctx);
+            String response = callGroq(prompt);
+            AnalysisResult result = parseResponse(response, ctx);
 
-        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                String response = callGroq(prompt);
-                AnalysisResult result = parseResponse(response, ctx);
-                if (result != null) return result;
-            } catch (Exception e) {
-                log.warn("AI attempt {}/{} failed: {}", attempt, MAX_RETRIES, e.getMessage());
-                if (attempt < MAX_RETRIES) {
-                    try {
-                        Thread.sleep((long) Math.pow(2, attempt) * 1000);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                }
+            if (result != null) {
+                log.info("AI analysis successful");
             }
-        }
 
-        log.warn("All AI attempts failed, returning null for fallback");
-        return null;
+            return result;
+
+        } catch (Exception e) {
+            log.error("AI request failed: {}", e.getMessage());
+            return null;
+        }
     }
 
     private String buildPrompt(ProjectContext ctx) {
-        String fileList = ctx.getFileNames().stream()
-                .limit(100)
+
+        String files = ctx.getFileNames()
+                .stream()
+                .limit(80)
                 .collect(Collectors.joining("\n"));
 
-        StringBuilder keyContents = new StringBuilder();
-        for (Map.Entry<String, String> entry : ctx.getFileContents().entrySet()) {
-            String content = entry.getValue();
-            if (content.length() > 2000) content = content.substring(0, 2000) + "\n... (truncated)";
-            keyContents.append("--- ").append(entry.getKey()).append(" ---\n");
-            keyContents.append(content).append("\n\n");
-        }
-
         return """
-                You are a DevOps expert. Analyze this project and generate deployment configurations.
-                
-                Project type detected: %s
-                Port: %s
-                
-                File listing:
-                %s
-                
-                Key file contents:
-                %s
-                
-                Generate a JSON response with EXACTLY these fields:
-                {
-                  "stack": "detected technology stack description",
-                  "dockerfile": "complete multi-stage Dockerfile content",
-                  "compose": "complete docker-compose.yml content",
-                  "env": "complete .env.example content with all needed variables",
-                  "githubActions": "complete GitHub Actions CI/CD workflow YAML",
-                  "deploySteps": "markdown formatted deployment steps",
-                  "recommendations": ["array", "of", "security and config recommendations"]
-                }
-                
-                Requirements:
-                - Dockerfile must be production-ready with multi-stage builds where applicable
-                - Include health checks in Dockerfile and compose
-                - GitHub Actions should build, test, and build Docker image
-                - Recommendations should include security best practices
-                - All generated configs must be real and executable, no placeholders
-                
-                Return ONLY valid JSON, no markdown code fences, no extra text.
-                """.formatted(ctx.getProjectType(), ctx.getDetectedPort(), fileList, keyContents);
+You are a senior DevOps engineer.
+
+Analyze this repository carefully.
+
+Generate production-ready DevOps configuration.
+
+Return ONLY valid JSON.
+
+Rules:
+1. deploySteps must NEVER be empty
+2. Give real deployment commands
+3. Generate production Dockerfile
+4. Generate CI/CD YAML
+5. Generate environment variables
+6. Use real values based on repo structure
+
+Project Type: %s
+Port: %s
+
+Files:
+%s
+
+Return JSON:
+
+{
+  "stack":"",
+  "dockerfile":"",
+  "compose":"",
+  "env":"",
+  "githubActions":"",
+  "deploySteps":"",
+  "recommendations":[]
+}
+""".formatted(
+                ctx.getProjectType(),
+                ctx.getDetectedPort(),
+                files
+        );
     }
 
     private String callGroq(String prompt) throws Exception {
+
         Map<String, Object> body = Map.of(
                 "model", groqModel,
                 "messages", List.of(
-                        Map.of("role", "system", "content", "You are a DevOps expert. Return only valid JSON."),
-                        Map.of("role", "user", "content", prompt)
+                        Map.of(
+                                "role", "system",
+                                "content",
+                                "Return ONLY raw JSON object. No markdown. No explanation."
+                        ),
+                        Map.of(
+                                "role", "user",
+                                "content", prompt
+                        )
                 ),
-                "temperature", 0.3,
+                "temperature", 0.2,
                 "max_tokens", 4096
         );
 
-        String jsonBody = mapper.writeValueAsString(body);
+        String json = mapper.writeValueAsString(body);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(groqApiUrl))
-                .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + groqApiKey)
+                .header("Content-Type", "application/json")
                 .timeout(Duration.ofSeconds(60))
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() != 200) {
-            throw new RuntimeException("Groq API returned status " + response.statusCode() + ": " + response.body());
-        }
+        HttpResponse<String> response =
+                httpClient.send(
+                        request,
+                        HttpResponse.BodyHandlers.ofString()
+                );
 
         JsonNode root = mapper.readTree(response.body());
-        return root.path("choices").path(0).path("message").path("content").asText();
+
+        return root.path("choices")
+                .path(0)
+                .path("message")
+                .path("content")
+                .asText();
     }
 
-    private AnalysisResult parseResponse(String response, ProjectContext ctx) {
+    private AnalysisResult parseResponse(
+            String response,
+            ProjectContext ctx
+    ) {
+
         try {
-            String cleaned = response.strip();
-            if (cleaned.startsWith("```")) {
-                cleaned = cleaned.replaceAll("^```[a-z]*\\n?", "").replaceAll("\\n?```$", "");
+
+            String cleaned = response.trim();
+
+            cleaned = cleaned.replace("```json", "");
+            cleaned = cleaned.replace("```", "");
+
+            int first = cleaned.indexOf("{");
+            int last = cleaned.lastIndexOf("}");
+
+            if (first == -1 || last == -1 || last <= first) {
+                log.error("No JSON found in AI response");
+                return null;
             }
+
+            cleaned = cleaned.substring(first, last + 1);
+
+            log.info("AI RAW JSON:\n{}", cleaned);
 
             JsonNode json = mapper.readTree(cleaned);
+
             AnalysisResult result = new AnalysisResult();
-            result.setStack(json.path("stack").asText(ctx.getProjectType()));
-            result.setDockerfile(json.path("dockerfile").asText(""));
-            result.setCompose(json.path("compose").asText(""));
-            result.setEnv(json.path("env").asText(""));
-            result.setGithubActions(json.path("githubActions").asText(""));
-            result.setDeploySteps(json.path("deploySteps").asText(""));
+
+            result.setStack(
+                    json.path("stack")
+                            .asText(ctx.getProjectType())
+            );
+
+            result.setDockerfile(
+                    formatNode(json.path("dockerfile"))
+            );
+
+            result.setCompose(
+                    formatNode(json.path("compose"))
+            );
+
+            result.setEnv(
+                    formatNode(json.path("env"))
+            );
+
+            result.setGithubActions(
+                    formatNode(json.path("githubActions"))
+            );
+
+            result.setDeploySteps(
+                    formatNode(json.path("deploySteps"))
+            );
 
             List<String> recs = new ArrayList<>();
-            JsonNode recsNode = json.path("recommendations");
-            if (recsNode.isArray()) {
-                for (JsonNode r : recsNode) {
-                    recs.add(r.asText());
+
+            JsonNode arr = json.path("recommendations");
+
+            if (arr.isArray()) {
+                for (JsonNode n : arr) {
+                    recs.add(n.asText());
                 }
             }
+
             result.setRecommendations(recs);
 
-            if (result.getDockerfile().isBlank()) return null;
             return result;
+
         } catch (Exception e) {
-            log.warn("Failed to parse AI response: {}", e.getMessage());
+            log.error("AI parse failed: {}", e.getMessage());
             return null;
         }
     }
+
+    private String formatNode(JsonNode node) {
+
+        try {
+
+            if (node == null || node.isMissingNode()) {
+                return "";
+            }
+
+            if (node.isTextual()) {
+                return node.asText();
+            }
+
+            if (node.isArray()) {
+
+                StringBuilder sb = new StringBuilder();
+
+                int i = 1;
+
+                for (JsonNode item : node) {
+                    sb.append(i++)
+                            .append(". ")
+                            .append(item.asText())
+                            .append("\n");
+                }
+
+                return sb.toString();
+            }
+
+            if (node.isObject()) {
+
+                StringBuilder sb = new StringBuilder();
+
+                node.fields().forEachRemaining(entry ->
+                        sb.append(entry.getKey())
+                                .append("=")
+                                .append(entry.getValue().asText())
+                                .append("\n")
+                );
+
+                return sb.toString();
+            }
+
+            return node.toString();
+
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String generateReadme(ProjectContext ctx) {
+
+        return """
+# %s
+
+## Overview
+Generated by DevOpsPilot AI.
+
+## Stack
+%s
+
+## Setup
+docker-compose up --build
+
+## Deployment
+Use Docker / Render / Railway / VPS.
+
+## API
+Generated automatically.
+""".formatted(
+                ctx.getProjectType(),
+                ctx.getProjectType()
+        );
+    }
+
+    // -------------------------------------------------------------------------------------
+
+//    public String debugError(String error) {
+//
+//        String txt = error.toLowerCase();
+//
+//        if (txt.contains("port already in use")) {
+//            return """
+//Problem: Port already in use
+//
+//Fix:
+//lsof -i :8080
+//kill -9 PID
+//""";
+//        }
+//
+//        if (txt.contains("maven")) {
+//            return "Run: mvn clean install";
+//        }
+//
+//        if (txt.contains("docker")) {
+//            return "Try: docker system prune -a";
+//        }
+//
+//        return "Check logs and rebuild container.";
+//    }
+
+    public String debugError(String error) {
+
+        if (groqApiKey == null || groqApiKey.isBlank()) {
+            return localDebug(error);
+        }
+
+        try {
+
+            String prompt = """
+You are an expert DevOps debugger.
+
+Analyze the deployment/build/runtime error below.
+
+Return concise response in this format:
+
+Problem:
+Cause:
+Fix:
+Commands:
+Prevention:
+
+Error:
+%s
+""".formatted(error);
+
+            Map<String, Object> body = Map.of(
+                    "model", groqModel,
+                    "messages", List.of(
+                            Map.of(
+                                    "role", "system",
+                                    "content",
+                                    "You are a senior DevOps engineer."
+                            ),
+                            Map.of(
+                                    "role", "user",
+                                    "content", prompt
+                            )
+                    ),
+                    "temperature", 0.2,
+                    "max_tokens", 1000
+            );
+
+            String json = mapper.writeValueAsString(body);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(groqApiUrl))
+                    .header("Authorization", "Bearer " + groqApiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .timeout(Duration.ofSeconds(45))
+                    .build();
+
+            HttpResponse<String> response =
+                    httpClient.send(
+                            request,
+                            HttpResponse.BodyHandlers.ofString()
+                    );
+
+            JsonNode root = mapper.readTree(response.body());
+
+            return root.path("choices")
+                    .path(0)
+                    .path("message")
+                    .path("content")
+                    .asText();
+
+        } catch (Exception e) {
+            return localDebug(error);
+        }
+    }
+
+    private String localDebug(String error) {
+
+        String txt = error.toLowerCase();
+
+        if (txt.contains("port")) {
+            return """
+Problem: Port conflict
+
+Fix:
+netstat -ano | findstr :8080
+taskkill /PID <PID> /F
+""";
+        }
+
+        if (txt.contains("maven")) {
+            return """
+Problem: Maven build issue
+
+Fix:
+mvn clean install
+""";
+        }
+
+        if (txt.contains("docker")) {
+            return """
+Problem: Docker issue
+
+Fix:
+docker system prune -a
+docker compose up --build
+""";
+        }
+
+        return """
+Problem: Unknown issue
+
+Fix:
+Check logs and rebuild.
+""";
+    }
+
+    // ------------------------------------------------------------------------------------
 }
