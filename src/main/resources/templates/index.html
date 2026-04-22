@@ -1,436 +1,413 @@
-<!--<!DOCTYPE html>-->
-<!--<html lang="en">-->
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-<!--    <title>DevOpsPilot AI</title>-->
-<!--    <link rel="stylesheet" href="/css/style.css">-->
-<!--</head>-->
-
-<!--<body>-->
-
-<!--<div class="theme-toggle" onclick="toggleTheme()">☀️</div>-->
-
-<!--<div class="container">-->
-
-<!--    <header class="hero">-->
-<!--        <h1>⚙️ DevOpsPilot AI</h1>-->
-<!--        <p>Analyze repos and generate DevOps assets instantly</p>-->
-<!--    </header>-->
-
-<!--    <div class="tabs">-->
-<!--        <button class="tab active" data-tab="repo">GitHub URL</button>-->
-<!--        <button class="tab" data-tab="upload">Upload ZIP</button>-->
-<!--        <button class="tab" data-tab="debug">Debug Error</button>-->
-<!--&lt;!&ndash;        &#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&ndash;&gt;-->
-<!--        <button class="tab" data-tab="diagram">🏗️ Architecture</button>-->
-<!--&lt;!&ndash;        &#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&ndash;&gt;-->
-<!--    </div>-->
-
-<!--    <div class="tab-content active" id="tab-repo">-->
-<!--        <form id="repoForm" class="card">-->
-<!--            <input type="text"-->
-<!--                   id="repoUrl"-->
-<!--                   placeholder="https://github.com/user/repository"-->
-<!--                   required>-->
-
-<!--            <button type="submit" id="repoBtn" class="btn">-->
-<!--                <span class="btn-text">Analyze Repo</span>-->
-<!--                <span class="spinner hidden"></span>-->
-<!--            </button>-->
-<!--        </form>-->
-<!--    </div>-->
-
-<!--    <div class="tab-content" id="tab-upload">-->
-<!--        <form id="uploadForm" class="card">-->
-<!--            <input type="file" id="zipFile" required>-->
-
-<!--            <button type="submit" id="uploadBtn" class="btn">-->
-<!--                <span class="btn-text">Analyze ZIP</span>-->
-<!--                <span class="spinner hidden"></span>-->
-<!--            </button>-->
-<!--        </form>-->
-<!--    </div>-->
-
-<!--    <div class="tab-content" id="tab-debug">-->
-<!--        <div class="card">-->
-
-<!--            <textarea id="errorText"-->
-<!--                      rows="8"-->
-<!--                      placeholder="Paste Docker / Maven / Deployment error"></textarea>-->
-
-<!--            <button class="btn" onclick="debugError()">-->
-<!--                Fix My Error 🚀-->
-<!--            </button>-->
-
-<!--            <pre id="debugOutput"></pre>-->
-
-<!--        </div>-->
-<!--        <div class="tab-content" id="tab-diagram">-->
-
-<!--        <div class="diagram-input-card">-->
-<!--            <form id="diagramForm">-->
-<!--                <input-->
-<!--                        type="text"-->
-<!--                        id="diagramRepoUrl"-->
-<!--                        placeholder="https://github.com/username/repo"-->
-<!--                        required-->
-<!--                />-->
-<!--                <button class="btn" type="submit" id="diagramBtn">-->
-<!--                    <span class="btn-text">🏗️ Generate Architecture Diagram</span>-->
-<!--                    <div class="spinner hidden"></div>-->
-<!--                </button>-->
-<!--            </form>-->
-<!--        </div>-->
-<!--    </div>-->
-
-<!--    <section id="results" class="results hidden">-->
-
-<!--        <div class="result-topbar">-->
-
-<!--            <h2>Results</h2>-->
-
-<!--            <div class="stack-badge" id="stackBadge"></div>-->
-
-<!--            <button class="download-btn"-->
-<!--                    onclick="downloadZip()">-->
-<!--                📦 Download ZIP-->
-<!--            </button>-->
-
-<!--        </div>-->
-
-<!--        <div class="grid">-->
-
-<!--            <div class="result-card">-->
-<!--                <h3>🔐 Security</h3>-->
-<!--                <div id="security"></div>-->
-<!--            </div>-->
-
-<!--            <div class="result-card">-->
-<!--                <h3>📘 README.md</h3>-->
-
-<!--                <button class="mini-btn"-->
-<!--                        onclick="downloadSingle('README.md','readme')">-->
-<!--                    ⬇-->
-<!--                </button>-->
-
-<!--                <pre><code id="readme"></code></pre>-->
-<!--            </div>-->
-
-<!--            <div class="result-card">-->
-<!--                <h3>🐳 Dockerfile</h3>-->
-
-<!--                <button class="mini-btn"-->
-<!--                        onclick="downloadSingle('Dockerfile','dockerfile')">-->
-<!--                    ⬇-->
-<!--                </button>-->
-
-<!--                <pre><code id="dockerfile"></code></pre>-->
-<!--            </div>-->
-
-<!--            <div class="result-card">-->
-<!--                <h3>📦 docker-compose.yml</h3>-->
-
-<!--                <button class="mini-btn"-->
-<!--                        onclick="downloadSingle('docker-compose.yml','compose')">-->
-<!--                    ⬇-->
-<!--                </button>-->
-
-<!--                <pre><code id="compose"></code></pre>-->
-<!--            </div>-->
-
-<!--            <div class="result-card">-->
-<!--                <h3>🔑 .env.example</h3>-->
-
-<!--                <button class="mini-btn"-->
-<!--                        onclick="downloadSingle('.env.example','env')">-->
-<!--                    ⬇-->
-<!--                </button>-->
-
-<!--                <pre><code id="env"></code></pre>-->
-<!--            </div>-->
-
-<!--            <div class="result-card">-->
-<!--                <h3>⚙️ GitHub Actions</h3>-->
-
-<!--                <button class="mini-btn"-->
-<!--                        onclick="downloadSingle('deploy.yml','githubActions')">-->
-<!--                    ⬇-->
-<!--                </button>-->
-
-<!--                <pre><code id="githubActions"></code></pre>-->
-<!--            </div>-->
-
-<!--            <div class="result-card full">-->
-<!--                <h3>🚀 Deploy Steps</h3>-->
-<!--                <pre><code id="deploySteps"></code></pre>-->
-<!--            </div>-->
-
-<!--            &lt;!&ndash; NEW FEATURE &ndash;&gt;-->
-<!--            <div class="result-card full">-->
-<!--                <h3>🧠 AI Explain My Repo</h3>-->
-
-<!--                <button class="mini-btn"-->
-<!--                        onclick="downloadSingle('repo-explanation.md','repoExplanation')">-->
-<!--                    ⬇-->
-<!--                </button>-->
-
-<!--                <pre><code id="repoExplanation"></code></pre>-->
-<!--            </div>-->
-
-<!--        </div>-->
-
-<!--    </section>-->
-
-<!--</div>-->
-
-<!--<script src="/js/app.js"></script>-->
-<!--</body>-->
-<!--</html>-->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DevOpsPilot AI</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/style.css" />
 </head>
-
 <body>
 
-<div class="theme-toggle" onclick="toggleTheme()">☀️</div>
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
 
-<div class="container">
-
-    <!-- ── HEADER ─────────────────────────────────── -->
-
-    <header class="hero">
-        <h1>⚙️ DevOpsPilot AI</h1>
-        <p>Analyze repos and generate DevOps assets instantly</p>
-    </header>
-
-    <!-- ── TABS ───────────────────────────────────── -->
-
-    <div class="tabs">
-        <button class="tab active" data-tab="repo">GitHub URL</button>
-        <button class="tab" data-tab="upload">Upload ZIP</button>
-        <button class="tab" data-tab="debug">Debug Error</button>
-        <button class="tab" data-tab="diagram">🏗️ Architecture</button>
-    </div>
-
-    <!-- ── TAB: GitHub URL ────────────────────────── -->
-
-    <div class="tab-content active" id="tab-repo">
-        <form id="repoForm" class="card">
-            <input
-                    type="text"
-                    id="repoUrl"
-                    placeholder="https://github.com/user/repository"
-                    required
-            />
-            <button type="submit" id="repoBtn" class="btn">
-                <span class="btn-text">Analyze Repo</span>
-                <span class="spinner hidden"></span>
-            </button>
-        </form>
-    </div>
-
-    <!-- ── TAB: Upload ZIP ────────────────────────── -->
-
-    <div class="tab-content" id="tab-upload">
-        <form id="uploadForm" class="card">
-            <input type="file" id="zipFile" accept=".zip" required />
-            <button type="submit" id="uploadBtn" class="btn">
-                <span class="btn-text">Analyze ZIP</span>
-                <span class="spinner hidden"></span>
-            </button>
-        </form>
-    </div>
-
-    <!-- ── TAB: Debug Error ───────────────────────── -->
-
-    <div class="tab-content" id="tab-debug">
-        <div class="card">
-            <textarea
-                    id="errorText"
-                    rows="8"
-                    placeholder="Paste Docker / Maven / Deployment error"
-            ></textarea>
-
-            <button class="btn" onclick="debugError()">
-                <span class="btn-text">Fix My Error 🚀</span>
-            </button>
-
-            <pre id="debugOutput"></pre>
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <div class="logo-icon">⚙️</div>
+            <span class="logo-text">DevOpsPilot</span>
         </div>
+        <button class="sidebar-close" id="sidebarClose">✕</button>
     </div>
 
-    <!-- ── TAB: Architecture Diagram ─────────────── -->
+    <button class="new-analysis-btn" onclick="startNewAnalysis()">
+        <span class="btn-plus">+</span>
+        New Analysis
+    </button>
 
-    <div class="tab-content" id="tab-diagram">
+    <nav class="sidebar-nav">
+        <div class="nav-label">Tools</div>
+        <a class="nav-item active" data-tab="repo" onclick="switchTab('repo')">
+            <span class="nav-icon">🔗</span> GitHub URL
+        </a>
+        <a class="nav-item" data-tab="upload" onclick="switchTab('upload')">
+            <span class="nav-icon">📦</span> Upload ZIP
+        </a>
+        <a class="nav-item" data-tab="diagram" onclick="switchTab('diagram')">
+            <span class="nav-icon">🏗️</span> Architecture
+        </a>
+        <a class="nav-item" data-tab="debug" onclick="switchTab('debug')">
+            <span class="nav-icon">🐛</span> Debug Error
+        </a>
+    </nav>
 
-        <div class="diagram-input-card">
-            <form id="diagramForm">
-                <input
-                        type="text"
-                        id="diagramRepoUrl"
-                        placeholder="https://github.com/username/repo"
-                        required
-                />
-                <button class="btn" type="submit" id="diagramBtn">
-                    <span class="btn-text">🏗️ Generate Architecture Diagram</span>
-                    <div class="spinner hidden"></div>
-                </button>
-            </form>
+    <div class="sidebar-footer">
+        <div class="sidebar-footer-text">Built with ❤️ + AI</div>
+        <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()">
+            <span id="themeIcon">🌙</span>
+        </button>
+    </div>
+
+</aside>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════ -->
+<main class="main" id="main">
+
+    <!-- Mobile topbar -->
+    <div class="mobile-topbar">
+        <button class="hamburger" onclick="openSidebar()">☰</button>
+        <span class="mobile-brand">⚙️ DevOpsPilot AI</span>
+        <button class="theme-toggle-btn-mobile" onclick="toggleTheme()">
+            <span id="themeIconMobile">🌙</span>
+        </button>
+    </div>
+
+    <!-- ── HERO ───────────────────────────────── -->
+    <section class="hero" id="heroSection">
+
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            AI-Powered DevOps Automation
         </div>
 
-        <!-- Error banner -->
-        <div id="diagramError" class="diagram-error-banner hidden"></div>
+        <h1 class="hero-title">
+            Turn any repo into<br/>
+            <span class="hero-gradient">production-ready DevOps</span>
+        </h1>
 
-        <!-- Result (hidden until diagram arrives) -->
-        <div id="diagramResult" class="diagram-result hidden">
+        <p class="hero-subtitle">
+            Generate Dockerfiles, CI/CD pipelines, architecture diagrams,<br class="hide-mobile"/>
+            security audits and deployment guides — instantly.
+        </p>
 
-            <!-- Top bar -->
-            <div class="diagram-topbar">
-                <h2>🏗️ System Architecture</h2>
-                <div id="diagramMeta"></div>
-                <button class="download-btn" onclick="downloadDiagram()">
-                    ⬇️ Download SVG
-                </button>
+        <!-- ── INPUT AREA ── -->
+        <div class="input-panel" id="inputPanel">
+
+            <!-- Tab pills -->
+            <div class="input-tabs">
+                <button class="input-tab active" data-mode="repo"    onclick="setInputMode('repo')">🔗 GitHub URL</button>
+                <button class="input-tab"        data-mode="upload"  onclick="setInputMode('upload')">📦 ZIP File</button>
+                <button class="input-tab"        data-mode="diagram" onclick="setInputMode('diagram')">🏗️ Architecture</button>
+                <button class="input-tab"        data-mode="debug"   onclick="setInputMode('debug')">🐛 Debug</button>
             </div>
 
-            <!-- Diagram card -->
-            <div class="diagram-viewer-card">
-                <h3>📊 Architecture Diagram</h3>
+            <!-- Repo URL mode -->
+            <div class="input-mode active" id="mode-repo">
+                <form id="repoForm" onsubmit="handleRepoSubmit(event)">
+                    <div class="input-row">
+                        <input
+                                type="text"
+                                id="repoUrl"
+                                class="main-input"
+                                placeholder="https://github.com/username/repository"
+                                required
+                        />
+                        <button type="submit" id="repoBtn" class="submit-btn">
+                            <span class="btn-text">Analyze</span>
+                            <span class="spinner hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-                <!-- Mermaid SVG renders here -->
-                <div id="diagramContainer"></div>
+            <!-- ZIP Upload mode -->
+            <div class="input-mode" id="mode-upload">
+                <form id="uploadForm" onsubmit="handleUploadSubmit(event)">
+                    <div class="input-row">
+                        <label class="file-label" id="fileLabel">
+                            <input type="file" id="zipFile" accept=".zip" required onchange="updateFileLabel(this)" />
+                            <span class="file-label-text">📁 Choose ZIP file...</span>
+                        </label>
+                        <button type="submit" id="uploadBtn" class="submit-btn">
+                            <span class="btn-text">Analyze</span>
+                            <span class="spinner hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-                <!-- Action buttons -->
-                <div class="diagram-actions">
-                    <button
-                            class="diagram-action-btn btn-download-svg"
-                            onclick="downloadDiagram()"
-                    >
-                        ⬇️ Download as SVG
-                    </button>
-                    <button
-                            class="diagram-action-btn btn-toggle-source"
-                            onclick="toggleDiagramSource()"
-                    >
-                        &lt;/&gt; View Mermaid Source
+            <!-- Architecture diagram mode -->
+            <div class="input-mode" id="mode-diagram">
+                <form id="diagramForm" onsubmit="handleDiagramSubmit(event)">
+                    <div class="input-row">
+                        <input
+                                type="text"
+                                id="diagramRepoUrl"
+                                class="main-input"
+                                placeholder="https://github.com/username/repository"
+                                required
+                        />
+                        <button type="submit" id="diagramBtn" class="submit-btn">
+                            <span class="btn-text">Generate</span>
+                            <span class="spinner hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Debug error mode -->
+            <div class="input-mode" id="mode-debug">
+                <div class="debug-input-wrap">
+          <textarea
+                  id="errorText"
+                  class="debug-textarea"
+                  placeholder="Paste your Docker / Maven / deployment error here..."
+                  rows="5"
+          ></textarea>
+                    <button class="submit-btn debug-submit-btn" onclick="handleDebugSubmit()">
+                        <span class="btn-text">🔍 Fix Error</span>
+                        <span class="spinner hidden"></span>
                     </button>
                 </div>
-
-                <!-- Collapsible Mermaid source -->
-                <div id="diagramSourcePanel" class="diagram-source-panel hidden">
-                    <pre id="diagramSource"></pre>
-                </div>
             </div>
 
-        </div><!-- /diagramResult -->
-
-    </div><!-- /tab-diagram -->
-
-    <!-- ══════════════════════════════════════════════
-         ANALYSIS RESULTS
-         (shared by GitHub URL + Upload ZIP tabs)
-    ══════════════════════════════════════════════ -->
-
-    <section id="results" class="results hidden">
-
-        <div class="result-topbar">
-            <h2>Results</h2>
-            <div class="stack-badge" id="stackBadge"></div>
-            <button class="download-btn" onclick="downloadZip()">
-                📦 Download ZIP
-            </button>
         </div>
 
-        <div class="grid">
-
-            <!-- Security -->
-            <div class="result-card">
-                <h3>🔐 Security</h3>
-                <div id="security"></div>
-            </div>
-
-            <!-- README -->
-            <div class="result-card">
-                <h3>📘 README.md</h3>
-                <button class="mini-btn"
-                        onclick="downloadSingle('README.md','readme')">⬇</button>
-                <pre><code id="readme"></code></pre>
-            </div>
-
-            <!-- Dockerfile -->
-            <div class="result-card">
-                <h3>🐳 Dockerfile</h3>
-                <button class="mini-btn"
-                        onclick="downloadSingle('Dockerfile','dockerfile')">⬇</button>
-                <pre><code id="dockerfile"></code></pre>
-            </div>
-
-            <!-- docker-compose -->
-            <div class="result-card">
-                <h3>📦 docker-compose.yml</h3>
-                <button class="mini-btn"
-                        onclick="downloadSingle('docker-compose.yml','compose')">⬇</button>
-                <pre><code id="compose"></code></pre>
-            </div>
-
-            <!-- .env.example -->
-            <div class="result-card">
-                <h3>🔑 .env.example</h3>
-                <button class="mini-btn"
-                        onclick="downloadSingle('.env.example','env')">⬇</button>
-                <pre><code id="env"></code></pre>
-            </div>
-
-            <!-- GitHub Actions -->
-            <div class="result-card">
-                <h3>⚙️ GitHub Actions</h3>
-                <button class="mini-btn"
-                        onclick="downloadSingle('deploy.yml','githubActions')">⬇</button>
-                <pre><code id="githubActions"></code></pre>
-            </div>
-
-            <!-- Deploy Steps -->
-            <div class="result-card full">
-                <h3>🚀 Deploy Steps</h3>
-                <pre><code id="deploySteps"></code></pre>
-            </div>
-
-            <!-- AI Repo Explanation -->
-            <div class="result-card full">
-                <h3>🧠 AI Explain My Repo</h3>
-                <button class="mini-btn"
-                        onclick="downloadSingle('repo-explanation.md','repoExplanation')">⬇</button>
-                <pre><code id="repoExplanation"></code></pre>
-            </div>
-
+        <!-- Suggestion pills -->
+        <div class="suggestions">
+            <span class="suggest-label">Try:</span>
+            <button class="suggest-pill" onclick="fillSuggestion('repo', 'https://github.com/shivamp9381/chatterboxx')">💬 Analyze ChatterBoxx</button>
+            <button class="suggest-pill" onclick="setInputMode('diagram')">🏗️ Architecture diagram</button>
+            <button class="suggest-pill" onclick="setInputMode('debug')">🐛 Fix deploy error</button>
+            <button class="suggest-pill" onclick="setInputMode('upload')">📦 Upload ZIP</button>
         </div>
 
     </section>
 
-</div><!-- /container -->
+    <!-- ── RESULTS ─────────────────────────────── -->
+    <section class="results-section hidden" id="results">
+
+        <!-- Result header -->
+        <div class="result-header">
+            <div class="result-header-left">
+                <div class="ai-avatar">⚙️</div>
+                <div>
+                    <div class="result-title">AI Analysis Complete</div>
+                    <div class="result-subtitle">DevOpsPilot AI · just now</div>
+                </div>
+            </div>
+            <div class="result-header-right">
+                <div class="stack-pill" id="stackBadge">Detected Stack</div>
+                <button class="action-btn green" onclick="downloadZip()">📦 Download All</button>
+            </div>
+        </div>
+
+        <!-- Security summary card -->
+        <div class="summary-card">
+            <div class="summary-item">
+                <span class="summary-label">Security Score</span>
+                <span class="summary-value" id="security">—</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-item">
+                <span class="summary-label">Stack</span>
+                <span class="summary-value" id="stackSummary">—</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-item">
+                <span class="summary-label">Assets Generated</span>
+                <span class="summary-value">6 files</span>
+            </div>
+        </div>
+
+        <!-- Accordion results -->
+        <div class="accordions" id="accordions">
+
+            <div class="accordion" id="acc-readme">
+                <button class="accordion-header" onclick="toggleAccordion('acc-readme')">
+                    <span class="acc-icon">📘</span>
+                    <span class="acc-title">README.md</span>
+                    <span class="acc-badge">Markdown</span>
+                    <span class="acc-arrow">›</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="code-toolbar">
+                        <span class="code-lang">markdown</span>
+                        <button class="copy-btn" onclick="copyCode('readme')">Copy</button>
+                        <button class="copy-btn" onclick="downloadSingle('README.md','readme')">⬇ Download</button>
+                    </div>
+                    <pre class="code-block"><code id="readme"></code></pre>
+                </div>
+            </div>
+
+            <div class="accordion" id="acc-dockerfile">
+                <button class="accordion-header" onclick="toggleAccordion('acc-dockerfile')">
+                    <span class="acc-icon">🐳</span>
+                    <span class="acc-title">Dockerfile</span>
+                    <span class="acc-badge">Docker</span>
+                    <span class="acc-arrow">›</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="code-toolbar">
+                        <span class="code-lang">dockerfile</span>
+                        <button class="copy-btn" onclick="copyCode('dockerfile')">Copy</button>
+                        <button class="copy-btn" onclick="downloadSingle('Dockerfile','dockerfile')">⬇ Download</button>
+                    </div>
+                    <pre class="code-block"><code id="dockerfile"></code></pre>
+                </div>
+            </div>
+
+            <div class="accordion" id="acc-compose">
+                <button class="accordion-header" onclick="toggleAccordion('acc-compose')">
+                    <span class="acc-icon">📦</span>
+                    <span class="acc-title">docker-compose.yml</span>
+                    <span class="acc-badge">YAML</span>
+                    <span class="acc-arrow">›</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="code-toolbar">
+                        <span class="code-lang">yaml</span>
+                        <button class="copy-btn" onclick="copyCode('compose')">Copy</button>
+                        <button class="copy-btn" onclick="downloadSingle('docker-compose.yml','compose')">⬇ Download</button>
+                    </div>
+                    <pre class="code-block"><code id="compose"></code></pre>
+                </div>
+            </div>
+
+            <div class="accordion" id="acc-env">
+                <button class="accordion-header" onclick="toggleAccordion('acc-env')">
+                    <span class="acc-icon">🔑</span>
+                    <span class="acc-title">.env.example</span>
+                    <span class="acc-badge">Config</span>
+                    <span class="acc-arrow">›</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="code-toolbar">
+                        <span class="code-lang">env</span>
+                        <button class="copy-btn" onclick="copyCode('env')">Copy</button>
+                        <button class="copy-btn" onclick="downloadSingle('.env.example','env')">⬇ Download</button>
+                    </div>
+                    <pre class="code-block"><code id="env"></code></pre>
+                </div>
+            </div>
+
+            <div class="accordion" id="acc-githubActions">
+                <button class="accordion-header" onclick="toggleAccordion('acc-githubActions')">
+                    <span class="acc-icon">⚙️</span>
+                    <span class="acc-title">GitHub Actions CI/CD</span>
+                    <span class="acc-badge">YAML</span>
+                    <span class="acc-arrow">›</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="code-toolbar">
+                        <span class="code-lang">yaml</span>
+                        <button class="copy-btn" onclick="copyCode('githubActions')">Copy</button>
+                        <button class="copy-btn" onclick="downloadSingle('deploy.yml','githubActions')">⬇ Download</button>
+                    </div>
+                    <pre class="code-block"><code id="githubActions"></code></pre>
+                </div>
+            </div>
+
+            <div class="accordion" id="acc-deploySteps">
+                <button class="accordion-header" onclick="toggleAccordion('acc-deploySteps')">
+                    <span class="acc-icon">🚀</span>
+                    <span class="acc-title">Deploy Steps</span>
+                    <span class="acc-badge">Guide</span>
+                    <span class="acc-arrow">›</span>
+                </button>
+                <div class="accordion-body">
+                    <pre class="code-block"><code id="deploySteps"></code></pre>
+                </div>
+            </div>
+
+            <div class="accordion" id="acc-repoExplanation">
+                <button class="accordion-header" onclick="toggleAccordion('acc-repoExplanation')">
+                    <span class="acc-icon">🧠</span>
+                    <span class="acc-title">AI Explain My Repo</span>
+                    <span class="acc-badge">AI</span>
+                    <span class="acc-arrow">›</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="code-toolbar">
+                        <span class="code-lang">markdown</span>
+                        <button class="copy-btn" onclick="copyCode('repoExplanation')">Copy</button>
+                        <button class="copy-btn" onclick="downloadSingle('repo-explanation.md','repoExplanation')">⬇ Download</button>
+                    </div>
+                    <pre class="code-block"><code id="repoExplanation"></code></pre>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── DEBUG RESULT ───────────────────────── -->
+    <section class="debug-result-section hidden" id="debugResultSection">
+        <div class="result-header">
+            <div class="result-header-left">
+                <div class="ai-avatar">🐛</div>
+                <div>
+                    <div class="result-title">Debug Analysis</div>
+                    <div class="result-subtitle">DevOpsPilot AI · just now</div>
+                </div>
+            </div>
+        </div>
+        <div class="debug-response-card">
+            <pre id="debugOutput"></pre>
+        </div>
+    </section>
+
+    <!-- ── DIAGRAM RESULT ─────────────────────── -->
+    <section class="diagram-result-section hidden" id="diagramResult">
+        <div class="result-header">
+            <div class="result-header-left">
+                <div class="ai-avatar">🏗️</div>
+                <div>
+                    <div class="result-title">Architecture Diagram</div>
+                    <div class="result-subtitle" id="diagramMeta">DevOpsPilot AI</div>
+                </div>
+            </div>
+            <div class="result-header-right">
+                <button class="action-btn green" onclick="downloadDiagram()">⬇ SVG</button>
+                <button class="action-btn" onclick="toggleDiagramSource()">‹/› Source</button>
+            </div>
+        </div>
+
+        <div class="diagram-error-banner hidden" id="diagramError"></div>
+
+        <div class="diagram-canvas-card">
+            <div id="diagramContainer"></div>
+        </div>
+
+        <div class="diagram-source-panel hidden" id="diagramSourcePanel">
+            <div class="code-toolbar">
+                <span class="code-lang">mermaid</span>
+                <button class="copy-btn" onclick="copyDiagramSource()">Copy</button>
+            </div>
+            <pre class="code-block"><code id="diagramSource"></code></pre>
+        </div>
+    </section>
+
+</main>
 
 <script>
-    // Toggle Mermaid source panel
+    /* ─── Accordion toggle ─── */
+    function toggleAccordion(id) {
+      const el = document.getElementById(id);
+      const isOpen = el.classList.contains("open");
+      el.classList.toggle("open", !isOpen);
+    }
+
+    /* ─── Diagram source toggle ─── */
     function toggleDiagramSource() {
-        const panel = document.getElementById("diagramSourcePanel");
-        const btn = document.querySelector(".btn-toggle-source");
-        if (panel.classList.contains("hidden")) {
-            panel.classList.remove("hidden");
-            btn.textContent = "✕ Hide Source";
-        } else {
-            panel.classList.add("hidden");
-            btn.innerHTML = "&lt;/&gt; View Mermaid Source";
-        }
+      const panel = document.getElementById("diagramSourcePanel");
+      panel.classList.toggle("hidden");
+    }
+
+    /* ─── Copy diagram source ─── */
+    function copyDiagramSource() {
+      const src = document.getElementById("diagramSource").textContent;
+      navigator.clipboard.writeText(src).then(() => showToast("Copied!"));
     }
 </script>
-
 <script src="/js/app.js"></script>
 </body>
 </html>

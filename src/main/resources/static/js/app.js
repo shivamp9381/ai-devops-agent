@@ -1,509 +1,269 @@
-//let latestData = {};
-//
-//document.addEventListener("DOMContentLoaded", () => {
-//    initTabs();
-//    initRepoForm();
-//    initUploadForm();
-//    loadTheme();
-//});
-//
-///* ----------------------------
-//   Tabs
-//---------------------------- */
-//
-//function initTabs() {
-//
-//    document.querySelectorAll(".tab").forEach(tab => {
-//
-//        tab.addEventListener("click", () => {
-//
-//            document.querySelectorAll(".tab")
-//                .forEach(t => t.classList.remove("active"));
-//
-//            document.querySelectorAll(".tab-content")
-//                .forEach(c => c.classList.remove("active"));
-//
-//            tab.classList.add("active");
-//
-//            document
-//                .getElementById("tab-" + tab.dataset.tab)
-//                .classList.add("active");
-//        });
-//    });
-//}
-//
-///* ----------------------------
-//   Repo Analyze
-//---------------------------- */
-//
-//function initRepoForm() {
-//
-//    document.getElementById("repoForm")
-//        .addEventListener("submit", async e => {
-//
-//            e.preventDefault();
-//
-//            const btn = document.getElementById("repoBtn");
-//
-//            setLoading(btn, true);
-//
-//            try {
-//
-//                const repoUrl =
-//                    document.getElementById("repoUrl").value.trim();
-//
-//                const res = await fetch("/api/analyze/repo", {
-//                    method: "POST",
-//                    headers: {
-//                        "Content-Type": "application/json"
-//                    },
-//                    body: JSON.stringify({
-//                        repoUrl: repoUrl
-//                    })
-//                });
-//
-//                const data = await res.json();
-//
-//                if (!res.ok) {
-//                    alert(data.error || "Analysis failed");
-//                    return;
-//                }
-//
-//                render(data);
-//
-//            } catch (e) {
-//                alert("Analysis failed");
-//            }
-//
-//            setLoading(btn, false);
-//        });
-//}
-//
-///* ----------------------------
-//   Upload ZIP
-//---------------------------- */
-//
-//function initUploadForm() {
-//
-//    document.getElementById("uploadForm")
-//        .addEventListener("submit", async e => {
-//
-//            e.preventDefault();
-//
-//            const btn = document.getElementById("uploadBtn");
-//
-//            setLoading(btn, true);
-//
-//            try {
-//
-//                const file =
-//                    document.getElementById("zipFile").files[0];
-//
-//                const fd = new FormData();
-//
-//                fd.append("file", file);
-//
-//                const res = await fetch("/api/analyze/upload", {
-//                    method: "POST",
-//                    body: fd
-//                });
-//
-//                const data = await res.json();
-//
-//                if (!res.ok) {
-//                    alert(data.error || "Upload failed");
-//                    return;
-//                }
-//
-//                render(data);
-//
-//            } catch (e) {
-//                alert("Upload failed");
-//            }
-//
-//            setLoading(btn, false);
-//        });
-//}
-//
-///* ----------------------------
-//   Debug Error
-//---------------------------- */
-//
-//async function debugError() {
-//
-//    const error =
-//        document.getElementById("errorText").value;
-//
-//    const res = await fetch("/api/debug", {
-//        method: "POST",
-//        headers: {
-//            "Content-Type": "application/json"
-//        },
-//        body: JSON.stringify({
-//            error: error
-//        })
-//    });
-//
-//    const txt = await res.text();
-//
-//    document.getElementById("debugOutput")
-//        .textContent = txt;
-//}
-//
-///* ----------------------------
-//   Loading
-//---------------------------- */
-//
-//function setLoading(button, loading) {
-//
-//    const text =
-//        button.querySelector(".btn-text");
-//
-//    const spinner =
-//        button.querySelector(".spinner");
-//
-//    if (loading) {
-//        button.disabled = true;
-//        text.classList.add("hidden");
-//        spinner.classList.remove("hidden");
-//    } else {
-//        button.disabled = false;
-//        text.classList.remove("hidden");
-//        spinner.classList.add("hidden");
-//    }
-//}
-//
-///* ----------------------------
-//   Render Results
-//---------------------------- */
-//
-//function render(data) {
-//
-//    latestData = data;
-//
-//    document.getElementById("results")
-//        .classList.remove("hidden");
-//
-//    document.getElementById("stackBadge")
-//        .textContent = data.stack || "Detected Stack";
-//
-//    document.getElementById("security")
-//        .textContent =
-//        (data.securityStatus || "") +
-//        " (" +
-//        (data.securityScore || 0) +
-//        "/100)";
-//
-//    setText("readme", data.readme);
-//    setText("dockerfile", data.dockerfile);
-//    setText("compose", data.compose);
-//    setText("env", data.env);
-//    setText("githubActions", data.githubActions);
-//    setText("deploySteps", data.deploySteps);
-//
-//    /* NEW FEATURE */
-//    setText("repoExplanation", data.repoExplanation);
-//
-//    window.scrollTo({
-//        top:
-//            document.getElementById("results")
-//                .offsetTop - 20,
-//        behavior: "smooth"
-//    });
-//}
-//
-//function setText(id, value) {
-//
-//    document.getElementById(id)
-//        .textContent = value || "";
-//}
-//
-///* ----------------------------
-//   Theme
-//---------------------------- */
-//
-//function toggleTheme() {
-//
-//    document.body.classList.toggle("light");
-//
-//    const mode =
-//        document.body.classList.contains("light")
-//            ? "light"
-//            : "dark";
-//
-//    localStorage.setItem("theme", mode);
-//}
-//
-//function loadTheme() {
-//
-//    const mode =
-//        localStorage.getItem("theme");
-//
-//    if (mode === "light") {
-//        document.body.classList.add("light");
-//    }
-//}
-//
-///* ----------------------------
-//   Downloads
-//---------------------------- */
-//
-//function downloadSingle(fileName, id) {
-//
-//    const text =
-//        document.getElementById(id).textContent;
-//
-//    const blob = new Blob(
-//        [text],
-//        { type: "text/plain" }
-//    );
-//
-//    const a =
-//        document.createElement("a");
-//
-//    a.href = URL.createObjectURL(blob);
-//    a.download = fileName;
-//    a.click();
-//}
-//
-//function downloadZip() {
-//
-//    let content = "";
-//
-//    content += "README.md\n\n";
-//    content += (latestData.readme || "") + "\n\n";
-//
-//    content += "Dockerfile\n\n";
-//    content += (latestData.dockerfile || "") + "\n\n";
-//
-//    content += "docker-compose.yml\n\n";
-//    content += (latestData.compose || "") + "\n\n";
-//
-//    content += ".env.example\n\n";
-//    content += (latestData.env || "") + "\n\n";
-//
-//    content += "deploy.yml\n\n";
-//    content += (latestData.githubActions || "") + "\n\n";
-//
-//    content += "repo-explanation.md\n\n";
-//    content += (latestData.repoExplanation || "") + "\n\n";
-//
-//    const blob = new Blob(
-//        [content],
-//        { type: "text/plain" }
-//    );
-//
-//    const a =
-//        document.createElement("a");
-//
-//    a.href = URL.createObjectURL(blob);
-//    a.download = "devops-assets.txt";
-//    a.click();
-//}
-
-
 let latestData = {};
+let currentMode = "repo"; // repo | upload | diagram | debug
 
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
-    initTabs();
-    initRepoForm();
-    initUploadForm();
-    initDiagramForm();
     loadTheme();
+    syncThemeIcons();
 });
 
-/* ----------------------------
-   Tabs
----------------------------- */
+/* ══════════════════════════════════════════════
+   INPUT MODE SWITCHING
+   (the pill tabs inside the input panel)
+══════════════════════════════════════════════ */
+function setInputMode(mode) {
+    currentMode = mode;
 
-function initTabs() {
-
-    document.querySelectorAll(".tab").forEach(tab => {
-
-        tab.addEventListener("click", () => {
-
-            document.querySelectorAll(".tab")
-                .forEach(t => t.classList.remove("active"));
-
-            document.querySelectorAll(".tab-content")
-                .forEach(c => c.classList.remove("active"));
-
-            tab.classList.add("active");
-
-            document
-                .getElementById("tab-" + tab.dataset.tab)
-                .classList.add("active");
-        });
+    // Update pill tabs
+    document.querySelectorAll(".input-tab").forEach(t => {
+        t.classList.toggle("active", t.dataset.mode === mode);
     });
+
+    // Update mode panels
+    document.querySelectorAll(".input-mode").forEach(m => {
+        m.classList.toggle("active", m.id === "mode-" + mode);
+    });
+
+    // Sync sidebar nav highlight
+    document.querySelectorAll(".nav-item").forEach(n => {
+        n.classList.toggle("active", n.dataset.tab === mode);
+    });
+
+    // Hide all result sections when switching mode
+    hideAllResults();
 }
 
-/* ----------------------------
-   Repo Analyze
----------------------------- */
+/* ══════════════════════════════════════════════
+   SIDEBAR NAV (legacy tab system compatibility)
+══════════════════════════════════════════════ */
+function switchTab(tab) {
+    setInputMode(tab);
+    // On mobile, close sidebar after nav click
+    closeSidebar();
+    // Scroll hero into view
+    document.getElementById("heroSection").scrollIntoView({ behavior: "smooth" });
+}
 
-function initRepoForm() {
+/* ══════════════════════════════════════════════
+   SIDEBAR MOBILE
+══════════════════════════════════════════════ */
+function openSidebar() {
+    document.getElementById("sidebar").classList.add("open");
+    document.getElementById("sidebarOverlay").classList.add("open");
+}
 
-    document.getElementById("repoForm")
-        .addEventListener("submit", async e => {
+function closeSidebar() {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("open");
+}
 
-            e.preventDefault();
+/* ══════════════════════════════════════════════
+   NEW ANALYSIS
+══════════════════════════════════════════════ */
+function startNewAnalysis() {
+    hideAllResults();
+    document.getElementById("repoUrl").value = "";
+    document.getElementById("diagramRepoUrl").value = "";
+    document.getElementById("errorText").value = "";
+    document.getElementById("debugOutput").textContent = "";
+    setInputMode("repo");
+    document.getElementById("heroSection").scrollIntoView({ behavior: "smooth" });
+    closeSidebar();
+}
 
-            const btn = document.getElementById("repoBtn");
+function hideAllResults() {
+    document.getElementById("results").classList.add("hidden");
+    document.getElementById("debugResultSection").classList.add("hidden");
+    document.getElementById("diagramResult").classList.add("hidden");
+}
 
-            setLoading(btn, true);
+/* ══════════════════════════════════════════════
+   FILL SUGGESTION
+══════════════════════════════════════════════ */
+function fillSuggestion(mode, value) {
+    setInputMode(mode);
+    if (mode === "repo") {
+        document.getElementById("repoUrl").value = value;
+    } else if (mode === "diagram") {
+        document.getElementById("diagramRepoUrl").value = value;
+    }
+}
 
-            try {
+/* ══════════════════════════════════════════════
+   REPO ANALYZE — original API preserved
+══════════════════════════════════════════════ */
+async function handleRepoSubmit(e) {
+    e.preventDefault();
 
-                const repoUrl =
-                    document.getElementById("repoUrl").value.trim();
+    const btn = document.getElementById("repoBtn");
+    setLoading(btn, true);
+    hideAllResults();
 
-                const res = await fetch("/api/analyze/repo", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ repoUrl: repoUrl })
-                });
+    try {
+        const repoUrl = document.getElementById("repoUrl").value.trim();
 
-                const data = await res.json();
-
-                if (!res.ok) {
-                    alert(data.error || "Analysis failed");
-                    return;
-                }
-
-                render(data);
-
-            } catch (e) {
-                alert("Analysis failed");
-            }
-
-            setLoading(btn, false);
+        const res = await fetch("/api/analyze/repo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ repoUrl })
         });
-}
 
-/* ----------------------------
-   Upload ZIP
----------------------------- */
+        const data = await res.json();
 
-function initUploadForm() {
-
-    document.getElementById("uploadForm")
-        .addEventListener("submit", async e => {
-
-            e.preventDefault();
-
-            const btn = document.getElementById("uploadBtn");
-
-            setLoading(btn, true);
-
-            try {
-
-                const file =
-                    document.getElementById("zipFile").files[0];
-
-                const fd = new FormData();
-                fd.append("file", file);
-
-                const res = await fetch("/api/analyze/upload", {
-                    method: "POST",
-                    body: fd
-                });
-
-                const data = await res.json();
-
-                if (!res.ok) {
-                    alert(data.error || "Upload failed");
-                    return;
-                }
-
-                render(data);
-
-            } catch (e) {
-                alert("Upload failed");
-            }
-
-            setLoading(btn, false);
-        });
-}
-
-/* ----------------------------
-   Architecture Diagram
----------------------------- */
-
-function initDiagramForm() {
-
-    const form = document.getElementById("diagramForm");
-    if (!form) return;
-
-    form.addEventListener("submit", async e => {
-
-        e.preventDefault();
-
-        const btn = document.getElementById("diagramBtn");
-        const resultSection = document.getElementById("diagramResult");
-        const diagramContainer = document.getElementById("diagramContainer");
-        const diagramSource = document.getElementById("diagramSource");
-        const diagramMeta = document.getElementById("diagramMeta");
-        const diagramError = document.getElementById("diagramError");
-
-        setLoading(btn, true);
-        resultSection.classList.add("hidden");
-        diagramError.classList.add("hidden");
-
-        try {
-
-            const repoUrl =
-                document.getElementById("diagramRepoUrl").value.trim();
-
-            const res = await fetch("/api/diagram/repo", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ repoUrl: repoUrl })
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                diagramError.textContent = data.error || "Diagram generation failed";
-                diagramError.classList.remove("hidden");
-                return;
-            }
-
-            // Show metadata
-            diagramMeta.innerHTML =
-                `<span class="stack-badge">${data.projectType || "Unknown"}</span>` +
-                (data.services && data.services.length > 0
-                    ? data.services.map(s =>
-                        `<span class="service-badge">${s}</span>`
-                    ).join("")
-                    : "");
-
-            // Show raw source
-            diagramSource.textContent = data.mermaid;
-
-            // Render with Mermaid.js
-            await renderMermaid(diagramContainer, data.mermaid);
-
-            resultSection.classList.remove("hidden");
-
-            // Smooth scroll
-            resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
-
-        } catch (err) {
-            diagramError.textContent = "Failed to generate diagram: " + err.message;
-            diagramError.classList.remove("hidden");
+        if (!res.ok) {
+            showToast("❌ " + (data.error || "Analysis failed"));
+            return;
         }
 
-        setLoading(btn, false);
-    });
+        render(data);
+
+    } catch (err) {
+        showToast("❌ Analysis failed. Check your URL.");
+    }
+
+    setLoading(btn, false);
 }
 
-/* ----------------------------
-   Mermaid Renderer
----------------------------- */
+/* ══════════════════════════════════════════════
+   ZIP UPLOAD — original API preserved
+══════════════════════════════════════════════ */
+async function handleUploadSubmit(e) {
+    e.preventDefault();
 
+    const btn = document.getElementById("uploadBtn");
+    setLoading(btn, true);
+    hideAllResults();
+
+    try {
+        const file = document.getElementById("zipFile").files[0];
+        const fd = new FormData();
+        fd.append("file", file);
+
+        const res = await fetch("/api/analyze/upload", {
+            method: "POST",
+            body: fd
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            showToast("❌ " + (data.error || "Upload failed"));
+            return;
+        }
+
+        render(data);
+
+    } catch (err) {
+        showToast("❌ Upload failed.");
+    }
+
+    setLoading(btn, false);
+}
+
+/* ══════════════════════════════════════════════
+   DEBUG ERROR — original API preserved
+══════════════════════════════════════════════ */
+async function handleDebugSubmit() {
+    const btn = document.querySelector(".debug-submit-btn");
+    const error = document.getElementById("errorText").value.trim();
+
+    if (!error) { showToast("Please paste an error first"); return; }
+
+    setLoading(btn, true);
+    hideAllResults();
+
+    try {
+        const res = await fetch("/api/debug", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ error })
+        });
+
+        const txt = await res.text();
+
+        document.getElementById("debugOutput").textContent = txt;
+        document.getElementById("debugResultSection").classList.remove("hidden");
+
+        document.getElementById("debugResultSection")
+            .scrollIntoView({ behavior: "smooth", block: "start" });
+
+    } catch (err) {
+        showToast("❌ Debug request failed.");
+    }
+
+    setLoading(btn, false);
+}
+
+// Keep legacy onclick="debugError()" working
+async function debugError() {
+    await handleDebugSubmit();
+}
+
+/* ══════════════════════════════════════════════
+   ARCHITECTURE DIAGRAM — original API preserved
+══════════════════════════════════════════════ */
+async function handleDiagramSubmit(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById("diagramBtn");
+    const diagramResult = document.getElementById("diagramResult");
+    const diagramError  = document.getElementById("diagramError");
+    const diagramMeta   = document.getElementById("diagramMeta");
+    const diagramContainer = document.getElementById("diagramContainer");
+    const diagramSource = document.getElementById("diagramSource");
+
+    setLoading(btn, true);
+    hideAllResults();
+    diagramError.classList.add("hidden");
+
+    try {
+        const repoUrl = document.getElementById("diagramRepoUrl").value.trim();
+
+        const res = await fetch("/api/diagram/repo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ repoUrl })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            diagramError.textContent = data.error || "Diagram generation failed";
+            diagramError.classList.remove("hidden");
+            diagramResult.classList.remove("hidden");
+            return;
+        }
+
+        // Meta
+        diagramMeta.textContent =
+            (data.projectType || "Unknown") +
+            (data.services && data.services.length > 0
+                ? " · " + data.services.join(", ")
+                : "");
+
+        // Source
+        diagramSource.textContent = data.mermaid;
+
+        // Render
+        await renderMermaid(diagramContainer, data.mermaid);
+
+        diagramResult.classList.remove("hidden");
+        diagramResult.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    } catch (err) {
+        showToast("❌ Diagram generation failed: " + err.message);
+    }
+
+    setLoading(btn, false);
+}
+
+/* ══════════════════════════════════════════════
+   MERMAID RENDERER
+══════════════════════════════════════════════ */
 async function renderMermaid(container, mermaidCode) {
 
-    // Load Mermaid.js from CDN if not already loaded
     if (typeof mermaid === "undefined") {
         await loadScript("https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js");
     }
@@ -511,46 +271,42 @@ async function renderMermaid(container, mermaidCode) {
     mermaid.initialize({
         startOnLoad: false,
         theme: document.body.classList.contains("light") ? "default" : "dark",
-        flowchart: {
-            curve: "basis",
-            padding: 20
-        },
+        flowchart: { curve: "basis", padding: 20 },
         themeVariables: {
-            primaryColor: "#6366f1",
-            primaryTextColor: "#ffffff",
-            primaryBorderColor: "#8b5cf6",
-            lineColor: "#8b5cf6",
-            secondaryColor: "#0d1a36",
-            tertiaryColor: "#0d1a36",
-            background: "#07142d",
-            mainBkg: "#0d1a36",
-            nodeBorder: "#6366f1",
-            clusterBkg: "#111c35",
-            titleColor: "#ffffff",
-            edgeLabelBackground: "#0d1a36",
-            fontFamily: "JetBrains Mono, monospace"
+            primaryColor:        "#6366f1",
+            primaryTextColor:    "#ffffff",
+            primaryBorderColor:  "#8b5cf6",
+            lineColor:           "#8b5cf6",
+            secondaryColor:      "#111827",
+            tertiaryColor:       "#111827",
+            background:          "#0B1120",
+            mainBkg:             "#111827",
+            nodeBorder:          "#6366f1",
+            clusterBkg:          "#1a2236",
+            titleColor:          "#f1f5f9",
+            edgeLabelBackground: "#111827",
+            fontFamily:          "Inter, sans-serif"
         }
     });
 
     try {
-        const id = "mermaid-diagram-" + Date.now();
+        const id = "mermaid-" + Date.now();
         const { svg } = await mermaid.render(id, mermaidCode);
         container.innerHTML = svg;
 
-        // Make SVG responsive
         const svgEl = container.querySelector("svg");
         if (svgEl) {
             svgEl.style.maxWidth = "100%";
-            svgEl.style.height = "auto";
+            svgEl.style.height   = "auto";
         }
 
     } catch (err) {
         container.innerHTML =
-            `<div class="diagram-error-msg">
-                ⚠️ Could not render diagram.<br>
-                <small>${err.message}</small>
+            `<div style="color:#f87171;text-align:center;padding:32px;font-size:14px;">
+                ⚠️ Could not render diagram<br/>
+                <small style="color:#94a3b8;">${err.message}</small>
             </div>`;
-        console.error("Mermaid render error:", err);
+        console.error("Mermaid error:", err);
     }
 }
 
@@ -564,74 +320,43 @@ function loadScript(src) {
     });
 }
 
-/* ----------------------------
-   Debug Error
----------------------------- */
-
-async function debugError() {
-
-    const error = document.getElementById("errorText").value;
-
-    const res = await fetch("/api/debug", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: error })
-    });
-
-    const txt = await res.text();
-
-    document.getElementById("debugOutput").textContent = txt;
-}
-
-/* ----------------------------
-   Loading
----------------------------- */
-
-function setLoading(button, loading) {
-
-    const text = button.querySelector(".btn-text");
-    const spinner = button.querySelector(".spinner");
-
-    if (loading) {
-        button.disabled = true;
-        text.classList.add("hidden");
-        spinner.classList.remove("hidden");
-    } else {
-        button.disabled = false;
-        text.classList.remove("hidden");
-        spinner.classList.add("hidden");
-    }
-}
-
-/* ----------------------------
-   Render Results
----------------------------- */
-
+/* ══════════════════════════════════════════════
+   RENDER RESULTS — original logic preserved
+══════════════════════════════════════════════ */
 function render(data) {
 
     latestData = data;
 
-    document.getElementById("results").classList.remove("hidden");
+    // Stack badge (two places)
+    const stackText = data.stack || "Detected Stack";
+    document.getElementById("stackBadge").textContent  = stackText;
+    document.getElementById("stackSummary").textContent = stackText;
 
-    document.getElementById("stackBadge").textContent =
-        data.stack || "Detected Stack";
-
+    // Security
     document.getElementById("security").textContent =
-        (data.securityStatus || "") +
-        " (" + (data.securityScore || 0) + "/100)";
+        (data.securityStatus || "") + " (" + (data.securityScore || 0) + "/100)";
 
-    setText("readme", data.readme);
-    setText("dockerfile", data.dockerfile);
-    setText("compose", data.compose);
-    setText("env", data.env);
-    setText("githubActions", data.githubActions);
-    setText("deploySteps", data.deploySteps);
+    // Code blocks
+    setText("readme",          data.readme);
+    setText("dockerfile",      data.dockerfile);
+    setText("compose",         data.compose);
+    setText("env",             data.env);
+    setText("githubActions",   data.githubActions);
+    setText("deploySteps",     data.deploySteps);
     setText("repoExplanation", data.repoExplanation);
 
-    window.scrollTo({
-        top: document.getElementById("results").offsetTop - 20,
-        behavior: "smooth"
-    });
+    // Show results section
+    const section = document.getElementById("results");
+    section.classList.remove("hidden");
+
+    // Open first accordion by default
+    const first = document.querySelector(".accordion");
+    if (first && !first.classList.contains("open")) {
+        first.classList.add("open");
+    }
+
+    // Smooth scroll
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function setText(id, value) {
@@ -639,38 +364,61 @@ function setText(id, value) {
     if (el) el.textContent = value || "";
 }
 
-/* ----------------------------
-   Theme
----------------------------- */
+/* ══════════════════════════════════════════════
+   LOADING STATE
+══════════════════════════════════════════════ */
+function setLoading(button, loading) {
+    if (!button) return;
+    const text    = button.querySelector(".btn-text");
+    const spinner = button.querySelector(".spinner");
 
+    button.disabled = loading;
+    if (text)    text.classList.toggle("hidden", loading);
+    if (spinner) spinner.classList.toggle("hidden", !loading);
+}
+
+/* ══════════════════════════════════════════════
+   THEME
+══════════════════════════════════════════════ */
 function toggleTheme() {
-
     document.body.classList.toggle("light");
-
     const mode = document.body.classList.contains("light") ? "light" : "dark";
-
     localStorage.setItem("theme", mode);
+    syncThemeIcons();
 }
 
 function loadTheme() {
-
-    const mode = localStorage.getItem("theme");
-
-    if (mode === "light") {
+    if (localStorage.getItem("theme") === "light") {
         document.body.classList.add("light");
     }
 }
 
-/* ----------------------------
-   Downloads
----------------------------- */
+function syncThemeIcons() {
+    const isLight = document.body.classList.contains("light");
+    const icon = isLight ? "☀️" : "🌙";
+    const a = document.getElementById("themeIcon");
+    const b = document.getElementById("themeIconMobile");
+    if (a) a.textContent = icon;
+    if (b) b.textContent = icon;
+}
 
+/* ══════════════════════════════════════════════
+   COPY CODE
+══════════════════════════════════════════════ */
+function copyCode(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    navigator.clipboard.writeText(el.textContent).then(() => {
+        showToast("✅ Copied to clipboard");
+    });
+}
+
+/* ══════════════════════════════════════════════
+   DOWNLOADS — original logic preserved exactly
+══════════════════════════════════════════════ */
 function downloadSingle(fileName, id) {
-
     const text = document.getElementById(id).textContent;
-
     const blob = new Blob([text], { type: "text/plain" });
-
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = fileName;
@@ -678,20 +426,9 @@ function downloadSingle(fileName, id) {
 }
 
 function downloadDiagram() {
-
     const svg = document.querySelector("#diagramContainer svg");
-
-    if (!svg) {
-        alert("No diagram to download");
-        return;
-    }
-
-    // Download as SVG
-    const blob = new Blob(
-        [svg.outerHTML],
-        { type: "image/svg+xml" }
-    );
-
+    if (!svg) { showToast("No diagram to download"); return; }
+    const blob = new Blob([svg.outerHTML], { type: "image/svg+xml" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "architecture-diagram.svg";
@@ -699,20 +436,45 @@ function downloadDiagram() {
 }
 
 function downloadZip() {
-
     let content = "";
-
-    content += "README.md\n\n" + (latestData.readme || "") + "\n\n";
-    content += "Dockerfile\n\n" + (latestData.dockerfile || "") + "\n\n";
-    content += "docker-compose.yml\n\n" + (latestData.compose || "") + "\n\n";
-    content += ".env.example\n\n" + (latestData.env || "") + "\n\n";
-    content += "deploy.yml\n\n" + (latestData.githubActions || "") + "\n\n";
-    content += "repo-explanation.md\n\n" + (latestData.repoExplanation || "") + "\n\n";
-
+    content += "README.md\n\n"            + (latestData.readme          || "") + "\n\n";
+    content += "Dockerfile\n\n"           + (latestData.dockerfile       || "") + "\n\n";
+    content += "docker-compose.yml\n\n"   + (latestData.compose          || "") + "\n\n";
+    content += ".env.example\n\n"         + (latestData.env              || "") + "\n\n";
+    content += "deploy.yml\n\n"           + (latestData.githubActions    || "") + "\n\n";
+    content += "repo-explanation.md\n\n"  + (latestData.repoExplanation  || "") + "\n\n";
     const blob = new Blob([content], { type: "text/plain" });
-
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "devops-assets.txt";
     a.click();
+}
+
+/* ══════════════════════════════════════════════
+   FILE LABEL UPDATE
+══════════════════════════════════════════════ */
+function updateFileLabel(input) {
+    const label = document.querySelector(".file-label-text");
+    if (label && input.files[0]) {
+        label.textContent = "📁 " + input.files[0].name;
+    }
+}
+
+/* ══════════════════════════════════════════════
+   TOAST NOTIFICATION
+══════════════════════════════════════════════ */
+function showToast(msg) {
+    const existing = document.querySelector(".toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.4s";
+        setTimeout(() => toast.remove(), 400);
+    }, 2800);
 }
