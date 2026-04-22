@@ -328,6 +328,275 @@ body.light #debugOutput{
     color:#111111;
 }
 
+/* ============================================
+   APPEND THESE STYLES TO YOUR style.css
+   ============================================ */
+
+/* ---------------- DIAGRAM TAB ---------------- */
+
+.diagram-input-card {
+    background: #0d1a36;
+    padding: 28px;
+    border-radius: 18px;
+    border: 1px solid #203457;
+    margin-bottom: 28px;
+}
+
+body.light .diagram-input-card {
+    background: #ffffff;
+    border: 1px solid #dddddd;
+}
+
+/* ---------------- DIAGRAM RESULT SECTION ---------------- */
+
+.diagram-result {
+    margin-top: 12px;
+}
+
+.diagram-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.diagram-topbar h2 {
+    font-size: 28px;
+    color: #ffffff;
+    margin-right: auto;
+}
+
+body.light .diagram-topbar h2 {
+    color: #111111;
+}
+
+/* ---------------- SERVICE BADGE ---------------- */
+
+.service-badge {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13px;
+    background: #15284a;
+    color: #7dd3fc;
+    border: 1px solid #1e3a5f;
+}
+
+body.light .service-badge {
+    background: #e8f4fd;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+/* ---------------- DIAGRAM VIEWER ---------------- */
+
+.diagram-viewer-card {
+    background: #0d1a36;
+    border: 1px solid #203457;
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 22px;
+    position: relative;
+}
+
+body.light .diagram-viewer-card {
+    background: #ffffff;
+    border: 1px solid #dddddd;
+}
+
+.diagram-viewer-card h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #a5b4fc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.light .diagram-viewer-card h3 {
+    color: #6366f1;
+}
+
+/* The actual rendered SVG container */
+
+#diagramContainer {
+    background: #020817;
+    border-radius: 14px;
+    padding: 24px;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+body.light #diagramContainer {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+#diagramContainer svg {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Diagram action buttons row */
+
+.diagram-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.diagram-action-btn {
+    border: none;
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
+}
+
+.diagram-action-btn:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.btn-download-svg {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.btn-toggle-source {
+    background: #15284a;
+    color: #a5b4fc;
+    border: 1px solid #203457;
+}
+
+body.light .btn-toggle-source {
+    background: #f1f5f9;
+    color: #6366f1;
+    border: 1px solid #e2e8f0;
+}
+
+/* Source code panel (collapsible) */
+
+.diagram-source-panel {
+    margin-top: 16px;
+    background: #020817;
+    border-radius: 14px;
+    padding: 18px;
+    overflow: auto;
+    max-height: 250px;
+}
+
+body.light .diagram-source-panel {
+    background: #f1f5f9;
+}
+
+.diagram-source-panel pre {
+    color: #7dd3fc;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin: 0;
+}
+
+body.light .diagram-source-panel pre {
+    color: #0369a1;
+}
+
+/* Error message inside diagram box */
+
+.diagram-error-msg {
+    color: #f87171;
+    text-align: center;
+    padding: 24px;
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+/* Error banner above diagram */
+
+.diagram-error-banner {
+    background: #2d1515;
+    border: 1px solid #7f1d1d;
+    color: #fca5a5;
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+body.light .diagram-error-banner {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+/* Loading pulse for diagram container */
+
+.diagram-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: #6366f1;
+}
+
+.diagram-loading-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.diagram-loading-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #6366f1;
+    animation: bounce 1.2s infinite;
+}
+
+.diagram-loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.diagram-loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-10px); opacity: 1; }
+}
+
+/* ---------------- MOBILE ---------------- */
+
+@media (max-width: 950px) {
+
+    .diagram-topbar h2 {
+        font-size: 22px;
+    }
+
+    .diagram-actions {
+        flex-direction: column;
+    }
+
+    .diagram-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+
 /* ---------------- MOBILE ---------------- */
 
 @media(max-width:950px){
